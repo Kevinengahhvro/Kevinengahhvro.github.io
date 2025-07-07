@@ -1,1 +1,29 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #111;
+    color: #fff;
+    font-family: Arial, sans-serif;
+}
+
+.magnetic-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    background: radial-gradient(circle at center, rgba(0, 150, 255, 0.3) 0%, transparent 50%);
+    transition: background-position 0.05s;
+}
+
+.container {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    margin-top: 20%;
+}
 
