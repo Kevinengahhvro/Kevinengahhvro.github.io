@@ -25,7 +25,7 @@ class Arrow {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.angle = Math.PI / 2; // Start facing straight up
+        this.angle = Math.PI / 2; // Start facing up
     }
 
     draw() {
@@ -40,13 +40,15 @@ class Arrow {
         ctx.moveTo(arrowSize / 2, 0);
         ctx.lineTo(arrowSize / 4, arrowSize / 4);
 
-        // Color shift based on proximity
+        // Calculate color based on distance
         const distance = this.getDistanceToMouse();
-        if (distance < 150) {
-            ctx.strokeStyle = '#FF0000'; // Red when close
-        } else {
-            ctx.strokeStyle = '#00FF00'; // Green when far
-        }
+        const maxDist = 200;
+        const clampedDist = Math.min(distance, maxDist);
+        const ratio = 1 - clampedDist / maxDist; // 0 = far, 1 = close
+
+        const red = Math.floor(ratio * 255);
+        const green = Math.floor((1 - ratio) * 255);
+        ctx.strokeStyle = `rgb(${red}, ${green}, 0)`;
 
         ctx.lineWidth = 2;
         ctx.stroke();
@@ -55,7 +57,7 @@ class Arrow {
 
     update() {
         if (mouse.x === null || mouse.y === null) {
-            // No mouse on screen — rotate back to vertical
+            // No mouse — reset to vertical
             this.angle += (Math.PI / 2 - this.angle) * 0.05;
             return;
         }
@@ -63,14 +65,13 @@ class Arrow {
         let dx = mouse.x - this.x;
         let dy = mouse.y - this.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
-        let maxDist = 200;
+        const maxDist = 200;
 
         if (distance < maxDist) {
             let targetAngle = Math.atan2(dy, dx);
             let influence = (maxDist - distance) / maxDist;
-            this.angle += (targetAngle - this.angle) * influence * 0.2; // More responsive
+            this.angle += (targetAngle - this.angle) * influence * 0.2;
         } else {
-            // Smoothly return to vertical
             this.angle += (Math.PI / 2 - this.angle) * 0.05;
         }
     }
