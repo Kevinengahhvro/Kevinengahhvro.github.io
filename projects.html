@@ -25,7 +25,7 @@
       width: 100%;
       height: 100%;
       z-index: 0;
-      pointer-events: none; /* lets you scroll & click through canvas */
+      pointer-events: none;
     }
 
     .container {
@@ -82,33 +82,49 @@
       transform: scale(1.2) skewX(10deg) skewY(10deg);
       filter: brightness(1.4) saturate(2) blur(2px);
     }
+
+    .particle {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      background: #00ffaa;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 12;
+      animation: particle-fly 0.7s linear forwards;
+    }
+
+    @keyframes particle-fly {
+      to {
+        transform: translate(var(--dx), var(--dy)) scale(0);
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- Magnetic Arrow Background -->
   <canvas id="arrow-canvas"></canvas>
 
-  <!-- Your Content -->
   <div class="container">
     <h1>These are small things that I have worked on over the years and would like to share with you!</h1>
     <h2>These are a timeline of stuff I have done related to engineering or my other cool endeavours!</h2>
 
     <div class="timeline">
 
-      <div class="project" onclick="spaghettifyAndOpen('project1.html', this)">
+      <div class="project" onclick="tearOpenAndGo('project1.html', this)">
         <h2>🚀 Project 1: Energy Tile</h2>
         <p>Floor tile that generates electricity from footsteps — renewable energy meets real-world impact.</p>
         <img src="your-image-path/tile.jpg" alt="Energy Tile">
       </div>
 
-      <div class="project" onclick="spaghettifyAndOpen('project2.html', this)">
+      <div class="project" onclick="tearOpenAndGo('project2.html', this)">
         <h2>🛠️ Project 2: Water Propulsion System</h2>
         <p>3D-printed water propulsion system designed for efficiency and sustainability testing.</p>
         <img src="your-image-path/propulsion.jpg" alt="Water Propulsion">
       </div>
 
-      <div class="project" onclick="spaghettifyAndOpen('project3.html', this)">
+      <div class="project" onclick="tearOpenAndGo('project3.html', this)">
         <h2>🎸 Project 3: Guitar Mods</h2>
         <p>Combining engineering and music — custom guitar upgrades for sound and style.</p>
         <img src="your-image-path/guitar.jpg" alt="Guitar Mods">
@@ -117,26 +133,77 @@
     </div>
 
     <a href="./index.html"><h2>← Back to Main Page</h2></a>
-    
+
   </div>
 
   <script src="script.js"></script>
   <script>
-    function spaghettifyAndOpen(url, element) {
-      element.style.zIndex = '10';
-      element.style.transition = 'transform 1s ease, filter 1s ease';
+  function tearOpenAndGo(url, element) {
+    element.style.zIndex = '10';
+    element.style.transition = 'transform 0.8s ease, filter 0.8s ease';
+    element.style.transform = 'scale(1.2) skewX(30deg) skewY(30deg)';
+    element.style.filter = 'blur(2px) brightness(1.5) saturate(1.8)';
 
+    setTimeout(() => {
       let rotation = 0;
       const swirlInterval = setInterval(() => {
-        rotation += 15;
-        element.style.transform = `scale(0.1) rotate(${rotation}deg) skewX(50deg) skewY(50deg)`;
+        rotation += 20;
+        element.style.transform = `scale(0.1) rotate(${rotation}deg) skewX(90deg) skewY(90deg)`;
+        element.style.filter = 'blur(4px) brightness(2) saturate(2.5)';
       }, 50);
+
+      createRipple(element);
+      explodeParticles(element);
 
       setTimeout(() => {
         clearInterval(swirlInterval);
         window.location.href = url;
-      }, 800);
+      }, 700);
+
+    }, 300);
+  }
+
+  function createRipple(target) {
+    const ripple = document.createElement('div');
+    ripple.style.position = 'fixed';
+    ripple.style.top = '50%';
+    ripple.style.left = '50%';
+    ripple.style.width = '20px';
+    ripple.style.height = '20px';
+    ripple.style.borderRadius = '50%';
+    ripple.style.background = 'rgba(0, 255, 170, 0.4)';
+    ripple.style.transform = 'translate(-50%, -50%) scale(0)';
+    ripple.style.zIndex = '11';
+    ripple.style.pointerEvents = 'none';
+    ripple.style.transition = 'transform 0.6s ease-out, opacity 0.6s ease-out';
+    document.body.appendChild(ripple);
+
+    setTimeout(() => {
+      ripple.style.transform = 'translate(-50%, -50%) scale(15)';
+      ripple.style.opacity = '0';
+    }, 50);
+
+    setTimeout(() => {
+      ripple.remove();
+    }, 700);
+  }
+
+  function explodeParticles(target) {
+    const count = 20;
+    for (let i = 0; i < count; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+      const angle = Math.random() * 2 * Math.PI;
+      const distance = Math.random() * 150 + 50;
+      particle.style.left = `${window.innerWidth / 2}px`;
+      particle.style.top = `${window.innerHeight / 2}px`;
+      particle.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
+      particle.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
+      document.body.appendChild(particle);
+
+      setTimeout(() => particle.remove(), 700);
     }
+  }
   </script>
 </body>
 </html>
