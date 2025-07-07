@@ -2,7 +2,7 @@ const canvas = document.getElementById('particle-canvas');
 const ctx = canvas.getContext('2d');
 
 let particles = [];
-const numParticles = 100;
+const numParticles = 200;
 let mouse = { x: null, y: null };
 
 canvas.width = window.innerWidth;
@@ -29,8 +29,19 @@ class Particle {
     }
 
     draw() {
+        let dx = mouse.x - this.x;
+        let dy = mouse.y - this.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+
         ctx.beginPath();
-        ctx.fillStyle = '#00FFFF';
+
+        // Change color based on distance to cursor
+        if (distance < 100) {
+            ctx.fillStyle = '#FF00FF';  // Neon pink when close
+        } else {
+            ctx.fillStyle = '#00FFFF';  // Teal when far
+        }
+
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
     }
@@ -45,8 +56,8 @@ class Particle {
         let force = (maxDist - distance) / maxDist;
 
         if (distance < maxDist) {
-            this.x -= forceDirectionX * force * this.density;
-            this.y -= forceDirectionY * force * this.density;
+            this.x += forceDirectionX * force * this.density;
+            this.y += forceDirectionY * force * this.density;
         } else {
             // Return to original position
             if (this.x !== this.baseX) {
@@ -79,4 +90,3 @@ function animate() {
 
 init();
 animate();
-
