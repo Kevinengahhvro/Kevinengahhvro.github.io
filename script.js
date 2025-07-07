@@ -1,9 +1,11 @@
-const canvas = document.getElementById('particle-canvas');
+const canvas = document.getElementById('arrow-canvas');
 const ctx = canvas.getContext('2d');
 
-let particles = [];
-const numParticles = 200;
 let mouse = { x: null, y: null };
+let arrows = [];
+
+const spacing = 40; // grid spacing
+const arrowSize = 10;
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -11,6 +13,7 @@ canvas.height = window.innerHeight;
 window.addEventListener('resize', () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    init();
 });
 
 window.addEventListener('mousemove', (e) => {
@@ -18,72 +21,60 @@ window.addEventListener('mousemove', (e) => {
     mouse.y = e.clientY;
 });
 
-class Particle {
-    constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.radius = Math.random() * 3 + 1;
-        this.baseX = this.x;
-        this.baseY = this.y;
-        this.density = Math.random() * 30 + 1;
+class Arrow {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.angle = 0;
     }
 
     draw() {
-        let dx = mouse.x - this.x;
-        let dy = mouse.y - this.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
-
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        
         ctx.beginPath();
-
-        // Change color based on distance to cursor
-        if (distance < 100) {
-            ctx.fillStyle = '#FF00FF';  // Neon pink when close
-        } else {
-            ctx.fillStyle = '#00FFFF';  // Teal when far
-        }
-
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(-arrowSize / 2, 0);
+        ctx.lineTo(arrowSize / 2, 0);
+        ctx.lineTo(arrowSize / 4, -arrowSize / 4);
+        ctx.moveTo(arrowSize / 2, 0);
+        ctx.lineTo(arrowSize / 4, arrowSize / 4);
+        
+        ctx.strokeStyle = '#00FFAA';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
     }
 
     update() {
+        if (mouse.x === null || mouse.y === null) return;
+
         let dx = mouse.x - this.x;
         let dy = mouse.y - this.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
-        let maxDist = 150;
-        let forceDirectionX = dx / distance;
-        let forceDirectionY = dy / distance;
-        let force = (maxDist - distance) / maxDist;
 
-        if (distance < maxDist) {
-            this.x += forceDirectionX * force * this.density;
-            this.y += forceDirectionY * force * this.density;
-        } else {
-            // Return to original position
-            if (this.x !== this.baseX) {
-                let dx = this.x - this.baseX;
-                this.x -= dx / 10;
-            }
-            if (this.y !== this.baseY) {
-                let dy = this.y - this.baseY;
-                this.y -= dy / 10;
-            }
-        }
+        let influence = Math.max(0, 1 - distance / 300);
+
+        let targetAngle = Math.atan2(dy, dx);
+
+        this.angle += (targetAngle - this.angle) * influence * 0.1;
     }
 }
 
 function init() {
-    particles = [];
-    for (let i = 0; i < numParticles; i++) {
-        particles.push(new Particle());
+    arrows = [];
+    for (let x = 0; x < canvas.width; x += spacing) {
+        for (let y = 0; y < canvas.height; y += spacing) {
+            arrows.push(new Arrow(x, y));
+        }
     }
 }
 
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-        p.draw();
-        p.update();
+    arrows.forEach(a => {
+        a.update();
+        a.draw();
     });
     requestAnimationFrame(animate);
 }
