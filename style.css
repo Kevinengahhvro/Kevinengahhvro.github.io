@@ -9,7 +9,7 @@ html, body {
     font-family: Arial, sans-serif;
 }
 
-#particle-canvas {
+#arrow-canvas {
     position: fixed;
     top: 0;
     left: 0;
@@ -24,4 +24,3 @@ html, body {
     text-align: center;
     margin-top: 20%;
 }
-
