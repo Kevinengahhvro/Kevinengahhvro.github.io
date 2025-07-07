@@ -7,18 +7,50 @@
   <link rel="stylesheet" href="style.css">
   <title>Projects Timeline</title>
   <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow-y: scroll;
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+
+    #arrow-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 50px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
     .timeline {
-      width: 80%;
-      margin: 5% auto;
+      width: 100%;
+      margin: 50px auto;
       padding-left: 20px;
       border-left: 2px solid #00ffaa;
+      position: relative;
     }
 
     .project {
       position: relative;
-      margin: 50px 0;
+      margin: 60px 0;
       cursor: pointer;
       transition: transform 0.4s, filter 0.4s;
+      display: inline-block;
+      text-align: left;
+      max-width: 600px;
     }
 
     .project:hover {
@@ -62,19 +94,19 @@
 
     <div class="timeline">
 
-      <div class="project" onclick="alert('Project 1 Details')">
+      <div class="project" onclick="spaghettifyAndOpen('project1.html', this)">
         <h2>🚀 Project 1: Energy Tile</h2>
-        <p>A floor tile that generates electricity from footsteps — renewable energy meets real-world impact.</p>
+        <p>Floor tile that generates electricity from footsteps — renewable energy meets real-world impact.</p>
         <img src="your-image-path/tile.jpg" alt="Energy Tile">
       </div>
 
-      <div class="project" onclick="alert('Project 2 Details')">
+      <div class="project" onclick="spaghettifyAndOpen('project2.html', this)">
         <h2>🛠️ Project 2: Water Propulsion System</h2>
         <p>3D-printed water propulsion system designed for efficiency and sustainability testing.</p>
         <img src="your-image-path/propulsion.jpg" alt="Water Propulsion">
       </div>
 
-      <div class="project" onclick="alert('Project 3 Details')">
+      <div class="project" onclick="spaghettifyAndOpen('project3.html', this)">
         <h2>🎸 Project 3: Guitar Mods</h2>
         <p>Combining engineering and music — custom guitar upgrades for sound and style.</p>
         <img src="your-image-path/guitar.jpg" alt="Guitar Mods">
@@ -87,5 +119,23 @@
   </div>
 
   <script src="script.js"></script>
+  <script>
+    function spaghettifyAndOpen(url, element) {
+      element.style.zIndex = '10';
+      element.style.transition = 'transform 1s ease, filter 1s ease';
+
+      let rotation = 0;
+      const swirlInterval = setInterval(() => {
+        rotation += 15;
+        element.style.transform = `scale(0.1) rotate(${rotation}deg) skewX(50deg) skewY(50deg)`;
+      }, 50);
+
+      setTimeout(() => {
+        clearInterval(swirlInterval);
+        window.location.href = url;
+      }, 800);
+    }
+  </script>
 </body>
 </html>
+
