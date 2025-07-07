@@ -4,8 +4,8 @@ const ctx = canvas.getContext('2d');
 let mouse = { x: null, y: null };
 let arrows = [];
 
-const spacing = 40;
-const arrowSize = 10;
+const spacing = 20;    // Smaller spacing = More arrows
+const arrowSize = 6;   // Shrink arrow size so grid stays clean
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -25,7 +25,7 @@ class Arrow {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.angle = Math.PI / 2; // Start facing up
+        this.angle = Math.PI / 2; // Default vertical
     }
 
     draw() {
@@ -40,24 +40,22 @@ class Arrow {
         ctx.moveTo(arrowSize / 2, 0);
         ctx.lineTo(arrowSize / 4, arrowSize / 4);
 
-        // Calculate color based on distance
         const distance = this.getDistanceToMouse();
-        const maxDist = 200;
+        const maxDist = 150;
         const clampedDist = Math.min(distance, maxDist);
-        const ratio = 1 - clampedDist / maxDist; // 0 = far, 1 = close
+        const ratio = 1 - clampedDist / maxDist;
 
         const red = Math.floor(ratio * 255);
         const green = Math.floor((1 - ratio) * 255);
         ctx.strokeStyle = `rgb(${red}, ${green}, 0)`;
 
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
         ctx.restore();
     }
 
     update() {
         if (mouse.x === null || mouse.y === null) {
-            // No mouse — reset to vertical
             this.angle += (Math.PI / 2 - this.angle) * 0.05;
             return;
         }
@@ -65,12 +63,12 @@ class Arrow {
         let dx = mouse.x - this.x;
         let dy = mouse.y - this.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = 200;
+        const maxDist = 150;
 
         if (distance < maxDist) {
             let targetAngle = Math.atan2(dy, dx);
             let influence = (maxDist - distance) / maxDist;
-            this.angle += (targetAngle - this.angle) * influence * 0.2;
+            this.angle += (targetAngle - this.angle) * influence * 0.3; // More responsive
         } else {
             this.angle += (Math.PI / 2 - this.angle) * 0.05;
         }
