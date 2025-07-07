@@ -6,7 +6,7 @@ html, body {
     overflow: hidden;
     background: #111;
     color: #fff;
-    font-family: Geneva, Arial, Helvetica, sans-serif;
+    font-family: Geneva, sans-serif;
 }
 
 #arrow-canvas {
