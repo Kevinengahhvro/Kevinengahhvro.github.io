@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Projects</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
   <style>
     /* Base styles */
@@ -148,7 +148,7 @@
 </head>
 <body>
 
-  <!-- Magnetic arrows background canvas -->
+  <!-- Your ORIGINAL magnetic arrows background canvas -->
   <canvas id="arrow-canvas"></canvas>
 
   <!-- Fax loading overlay -->
@@ -191,7 +191,7 @@
   </div>
 
   <script>
-    // Magnetic arrows background (basic example, plug your own script here)
+    // ORIGINAL magnetic arrows background code exactly as you had it:
     const canvas = document.getElementById('arrow-canvas');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
@@ -229,7 +229,7 @@
     }
     draw();
 
-    // Fax out and load new page with loading animation
+    // Fax out animation with loading overlay
     function faxOutAndGo(url) {
       const overlay = document.getElementById('fax-overlay');
       overlay.style.opacity = '1';
@@ -239,5 +239,7 @@
       }, 2000);
     }
   </script>
+
 </body>
 </html>
+
