@@ -28,8 +28,8 @@
       pointer-events: none;
       background: repeating-linear-gradient(
         to bottom,
-        rgba(0, 255, 0, 0.05),
-        rgba(0, 255, 0, 0.05) 1px,
+        rgba(0, 255, 0, 0.03),
+        rgba(0, 255, 0, 0.03) 1px,
         transparent 1px,
         transparent 3px
       );
@@ -63,6 +63,8 @@
       margin-bottom: 30px;
       cursor: pointer;
       user-select: none;
+      color: #00ff00;
+      transition: color 0.3s ease;
     }
     .project::before {
       content: '';
@@ -76,6 +78,10 @@
       box-shadow: 0 0 8px #00ff00;
       transition: background 0.3s ease;
     }
+    .project:hover {
+      color: #ff00ff;
+      text-shadow: 0 0 6px #ff00ff;
+    }
     .project:hover::before {
       background: #ff00ff;
       box-shadow: 0 0 15px #ff00ff;
@@ -86,95 +92,71 @@
       font-size: 1.3rem;
       font-weight: bold;
       margin: 0 0 5px;
-      color: #00ff00;
-      transition: color 0.3s ease;
     }
     .project-desc {
       margin: 0;
       color: #00cc00;
+      transition: color 0.3s ease;
     }
-    .project:hover .project-title {
-      color: #ff00ff;
-      text-shadow: 0 0 6px #ff00ff;
+    .project:hover .project-desc {
+      color: #ff99ff;
     }
 
-    /* Draggable window styles */
-    .draggable-window {
+    /* Vector Background Arrows */
+    #arrow-canvas {
       position: fixed;
-      top: 50px;
-      left: 50px;
-      width: 600px;
-      max-width: 90vw;
-      background: rgba(0,0,0,0.9);
-      border: 2px solid #00ff00;
-      box-shadow: 0 0 10px #00ff00;
-      z-index: 10000;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Fax Loading Overlay */
+    #fax-loading {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.95);
+      color: #00ff00;
+      font-family: 'VT323', monospace;
+      font-size: 30px;
       display: flex;
       flex-direction: column;
-      cursor: default;
-      user-select: none;
-    }
-    .title-bar {
-      background: #004400;
-      color: #00ff00;
-      padding: 8px 12px;
-      font-family: 'VT323', monospace;
-      font-weight: bold;
-      cursor: grab;
-      display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
+      z-index: 10000;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
       user-select: none;
-    }
-    .title-bar img.icon {
-      width: 18px;
-      height: 18px;
-      margin-right: 8px;
-      filter: drop-shadow(0 0 2px #00ff00);
-    }
-    .title-bar .close-btn {
-      cursor: pointer;
-      font-size: 20px;
-      line-height: 1;
-      padding: 0 8px;
-      user-select: none;
-    }
-    /* Color coding by file type */
-    .image .title-bar {
-      background: #003300;
-      border-color: #00ff00;
-      color: #00ff00;
-    }
-    .video .title-bar {
-      background: #001144;
-      border-color: #0099ff;
-      color: #0099ff;
-    }
-    .pdf .title-bar {
-      background: #440000;
-      border-color: #ff3300;
-      color: #ff3300;
     }
 
-    /* Content inside draggable window */
-    .window-content {
-      padding: 15px;
-      overflow: auto;
-      max-height: 80vh;
+    /* Fax lines animation */
+    #fax-loading .fax-line {
+      width: 90%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent 0%, #00ff00 50%, transparent 100%);
+      margin: 4px 0;
+      animation: fax-scan 1s linear infinite;
     }
-    .window-content img, 
-    .window-content video, 
-    .window-content iframe {
-      max-width: 100%;
-      max-height: 70vh;
-      border: 1px solid currentColor;
-      background: #000;
-      display: block;
-      margin: auto;
-      box-shadow: 0 0 8px currentColor;
+    #fax-loading .fax-line:nth-child(odd) {
+      animation-delay: 0s;
     }
-    .window-content video {
-      outline: none;
+    #fax-loading .fax-line:nth-child(even) {
+      animation-delay: 0.5s;
+    }
+
+    @keyframes fax-scan {
+      0% {transform: translateX(-100%);}
+      100% {transform: translateX(100%);}
+    }
+
+    #fax-loading.show {
+      opacity: 1;
+      pointer-events: auto;
     }
 
   </style>
@@ -182,241 +164,15 @@
 <body>
   <div class="scanlines"></div>
 
+  <canvas id="arrow-canvas"></canvas>
+
   <div class="container">
     <h1>Projects Timeline</h1>
     <div class="timeline">
-      <div class="project" data-type="image" data-src="your-image.jpg" tabindex="0" role="button" aria-label="Project 1 Image: Energy Tile">
+      <div class="project" data-url="project1.html" tabindex="0" role="button" aria-label="Project 1: Energy Tile">
         <p class="project-title">Project 1: Energy Tile</p>
         <p class="project-desc">A floor tile that generates electricity from footsteps.</p>
       </div>
-      <div class="project" data-type="video" data-src="your-video.mp4" tabindex="0" role="button" aria-label="Project 2 Video: Water Propulsion">
+      <div class="project" data-url="project2.html" tabindex="0" role="button" aria-label="Project 2: Water Propulsion">
         <p class="project-title">Project 2: Water Propulsion</p>
-        <p class="project-desc">A water propulsion system prototype design.</p>
-      </div>
-      <div class="project" data-type="pdf" data-src="your-document.pdf" tabindex="0" role="button" aria-label="Project 3 PDF: Research Paper">
-        <p class="project-title">Project 3: Research Paper</p>
-        <p class="project-desc">Peer-reviewed paper on gaming and adolescent psychology.</p>
-      </div>
-      <!-- Add more projects easily here by duplicating the .project div and updating data attributes -->
-    </div>
-  </div>
-
-  <!-- Draggable window container (hidden by default) -->
-  <div id="draggable-container"></div>
-
-  <script>
-    // Vector Background arrows - same as your previous arrow canvas code
-    const canvas = document.createElement('canvas');
-    canvas.id = 'arrow-canvas';
-    canvas.style.position = 'fixed';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.width = '100vw';
-    canvas.style.height = '100vh';
-    canvas.style.zIndex = '0';
-    canvas.style.pointerEvents = 'none';
-    document.body.appendChild(canvas);
-
-    const ctx = canvas.getContext('2d');
-    let mouse = { x: null, y: null };
-    let arrows = [];
-    const spacing = 20;
-    const arrowSize = 6;
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      init();
-    }
-    window.addEventListener('resize', resizeCanvas);
-    window.addEventListener('mousemove', e => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-    });
-
-    class Arrow {
-      constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.angle = Math.PI / 2;
-      }
-      draw() {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle);
-        ctx.beginPath();
-        ctx.moveTo(-arrowSize / 2, 0);
-        ctx.lineTo(arrowSize / 2, 0);
-        ctx.lineTo(arrowSize / 4, -arrowSize / 4);
-        ctx.moveTo(arrowSize / 2, 0);
-        ctx.lineTo(arrowSize / 4, arrowSize / 4);
-        const distance = this.getDistanceToMouse();
-        const maxDist = 150;
-        const clampedDist = Math.min(distance, maxDist);
-        const ratio = 1 - clampedDist / maxDist;
-        const red = Math.floor(ratio * 255);
-        const green = Math.floor((1 - ratio) * 255);
-        ctx.strokeStyle = `rgb(${red}, ${green}, 0)`;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.restore();
-      }
-      update() {
-        if (mouse.x === null || mouse.y === null) {
-          this.angle += (Math.PI / 2 - this.angle) * 0.05;
-          return;
-        }
-        let dx = mouse.x - this.x;
-        let dy = mouse.y - this.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = 150;
-        if (distance < maxDist) {
-          let targetAngle = Math.atan2(dy, dx);
-          let influence = (maxDist - distance) / maxDist;
-          this.angle += (targetAngle - this.angle) * influence * 0.3;
-        } else {
-          this.angle += (Math.PI / 2 - this.angle) * 0.05;
-        }
-      }
-      getDistanceToMouse() {
-        if (mouse.x === null || mouse.y === null) return Infinity;
-        let dx = mouse.x - this.x;
-        let dy = mouse.y - this.y;
-        return Math.sqrt(dx * dx + dy * dy);
-      }
-    }
-
-    function init() {
-      arrows = [];
-      for (let x = 0; x < canvas.width; x += spacing) {
-        for (let y = 0; y < canvas.height; y += spacing) {
-          arrows.push(new Arrow(x, y));
-        }
-      }
-    }
-
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      arrows.forEach(a => {
-        a.update();
-        a.draw();
-      });
-      requestAnimationFrame(animate);
-    }
-
-    resizeCanvas();
-    init();
-    animate();
-
-    // Draggable window logic
-
-    const draggableContainer = document.getElementById('draggable-container');
-
-    function createDraggableWindow(title, type, src) {
-      // Close existing window if any
-      draggableContainer.innerHTML = '';
-
-      const win = document.createElement('div');
-      win.classList.add('draggable-window', type);
-
-      // Title bar
-      const titleBar = document.createElement('div');
-      titleBar.classList.add('title-bar');
-
-      // Icon depending on type
-      const icon = document.createElement('img');
-      icon.classList.add('icon');
-      if(type === 'image') icon.src = 'https://cdn-icons-png.flaticon.com/512/1087/1087961.png';
-      else if(type === 'video') icon.src = 'https://cdn-icons-png.flaticon.com/512/1484/1484519.png';
-      else if(type === 'pdf') icon.src = 'https://cdn-icons-png.flaticon.com/512/337/337946.png';
-      else icon.src = '';
-
-      titleBar.appendChild(icon);
-
-      const titleText = document.createElement('div');
-      titleText.textContent = title;
-      titleBar.appendChild(titleText);
-
-      const closeBtn = document.createElement('div');
-      closeBtn.classList.add('close-btn');
-      closeBtn.textContent = '×';
-      closeBtn.title = 'Close';
-      closeBtn.onclick = () => draggableContainer.innerHTML = '';
-      titleBar.appendChild(closeBtn);
-
-      win.appendChild(titleBar);
-
-      // Content
-      const content = document.createElement('div');
-      content.classList.add('window-content');
-
-      if (type === 'image') {
-        const img = document.createElement('img');
-        img.src = src;
-        content.appendChild(img);
-      } else if (type === 'video') {
-        const video = document.createElement('video');
-        video.src = src;
-        video.controls = true;
-        video.autoplay = true;
-        content.appendChild(video);
-      } else if (type === 'pdf') {
-        const iframe = document.createElement('iframe');
-        iframe.src = src;
-        iframe.style.width = '100%';
-        iframe.style.height = '70vh';
-        content.appendChild(iframe);
-      }
-
-      win.appendChild(content);
-      draggableContainer.appendChild(win);
-
-      // Dragging functionality
-      let isDragging = false;
-      let offsetX, offsetY;
-
-      titleBar.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        offsetX = e.clientX - win.offsetLeft;
-        offsetY = e.clientY - win.offsetTop;
-        titleBar.style.cursor = 'grabbing';
-      });
-
-      window.addEventListener('mouseup', () => {
-        isDragging = false;
-        titleBar.style.cursor = 'grab';
-      });
-
-      window.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        let left = e.clientX - offsetX;
-        let top = e.clientY - offsetY;
-
-        // keep window inside viewport
-        left = Math.max(0, Math.min(left, window.innerWidth - win.offsetWidth));
-        top = Math.max(0, Math.min(top, window.innerHeight - win.offsetHeight));
-
-        win.style.left = left + 'px';
-        win.style.top = top + 'px';
-      });
-    }
-
-    // Click handlers for projects
-    document.querySelectorAll('.project').forEach(project => {
-      project.addEventListener('click', () => {
-        const type = project.getAttribute('data-type');
-        const src = project.getAttribute('data-src');
-        const title = project.querySelector('.project-title').textContent;
-        createDraggableWindow(title, type, src);
-      });
-      // Keyboard accessible
-      project.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          project.click();
-        }
-      });
-    });
-  </script>
-</body>
-</html>
+       
