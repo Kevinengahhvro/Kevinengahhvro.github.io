@@ -6,20 +6,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
   <style>
-    /* Basic Reset */
-    * {
-      box-sizing: border-box;
-    }
     html, body {
       margin: 0; padding: 0;
       height: 100%;
       background: #000;
       color: #00ff00;
       font-family: 'VT323', monospace;
-      overflow-y: scroll;
+      overflow: hidden;
+      user-select: none;
     }
 
-    /* CRT Scanlines overlay */
+    /* Arrow canvas behind everything */
+    #arrow-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Scanlines overlay subtle */
     .scanlines::before {
       content: '';
       position: fixed;
@@ -36,122 +42,71 @@
       z-index: 9999;
     }
 
-    /* Container & Timeline */
+    /* Container with vertical scroll */
     .container {
-      max-width: 700px;
-      margin: 40px auto 80px;
-      padding: 0 20px;
       position: relative;
       z-index: 1;
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 20px;
+      height: calc(100vh - 100px);
+      overflow-y: auto;
+      box-sizing: border-box;
+      border: 1px solid #00ff00;
+      background: rgba(0,0,0,0.7);
+      border-radius: 8px;
     }
+
     h1 {
+      margin-bottom: 30px;
       text-align: center;
-      margin-bottom: 30px;
+      font-size: 2.8rem;
+      border-bottom: 2px solid #00ff00;
+      padding-bottom: 8px;
     }
 
-    /* Timeline vertical line */
-    .timeline {
-      position: relative;
-      margin-left: 30px;
-      border-left: 2px solid #00ff00;
-      padding-left: 20px;
-    }
-
-    /* Each project item */
-    .project {
-      position: relative;
-      margin-bottom: 30px;
-      cursor: pointer;
-      user-select: none;
-      color: #00ff00;
-      transition: color 0.3s ease;
-    }
-    .project::before {
-      content: '';
-      position: absolute;
-      left: -32px;
-      top: 8px;
-      width: 20px; height: 20px;
-      background: #00ff00;
-      border-radius: 50%;
-      border: 2px solid #000;
-      box-shadow: 0 0 8px #00ff00;
-      transition: background 0.3s ease;
-    }
-    .project:hover {
-      color: #ff00ff;
-      text-shadow: 0 0 6px #ff00ff;
-    }
-    .project:hover::before {
-      background: #ff00ff;
-      box-shadow: 0 0 15px #ff00ff;
-    }
-
-    /* Project text */
-    .project-title {
-      font-size: 1.3rem;
-      font-weight: bold;
-      margin: 0 0 5px;
-    }
-    .project-desc {
+    /* Timeline style */
+    ul.timeline {
+      list-style: none;
+      padding-left: 0;
       margin: 0;
-      color: #00cc00;
-      transition: color 0.3s ease;
-    }
-    .project:hover .project-desc {
-      color: #ff99ff;
     }
 
-    /* Vector Background Arrows */
-    #arrow-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 0;
-      pointer-events: none;
+    ul.timeline li {
+      margin-bottom: 25px;
+      cursor: pointer;
+      padding: 12px 15px;
+      border: 1px solid #00ff00;
+      border-radius: 5px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      user-select: none;
+    }
+    ul.timeline li:hover {
+      background-color: #00ff00;
+      color: #000;
+      font-weight: bold;
+      box-shadow: 0 0 10px #00ff00;
     }
 
-    /* Fax Loading Overlay */
+    /* Fax loading screen */
     #fax-loading {
       position: fixed;
       top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0,0,0,0.95);
+      width: 100vw; height: 100vh;
+      background: #000;
       color: #00ff00;
       font-family: 'VT323', monospace;
-      font-size: 30px;
+      font-size: 28px;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
+      flex-direction: column;
       z-index: 10000;
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.3s ease;
+      white-space: pre-line;
       user-select: none;
-    }
-
-    /* Fax lines animation */
-    #fax-loading .fax-line {
-      width: 90%;
-      height: 3px;
-      background: linear-gradient(90deg, transparent 0%, #00ff00 50%, transparent 100%);
-      margin: 4px 0;
-      animation: fax-scan 1s linear infinite;
-    }
-    #fax-loading .fax-line:nth-child(odd) {
-      animation-delay: 0s;
-    }
-    #fax-loading .fax-line:nth-child(even) {
-      animation-delay: 0.5s;
-    }
-
-    @keyframes fax-scan {
-      0% {transform: translateX(-100%);}
-      100% {transform: translateX(100%);}
     }
 
     #fax-loading.show {
@@ -159,20 +114,180 @@
       pointer-events: auto;
     }
 
+    #fax-box {
+      border: 2px solid #00ff00;
+      padding: 30px 50px;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 0 15px #00ff00;
+      line-height: 1.4;
+    }
+
+    /* Spinner / scrolling icon */
+    @keyframes scrollAnim {
+      0% { transform: translateY(0); opacity: 1; }
+      50% { transform: translateY(10px); opacity: 0.5; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+
+    #scroll-icon {
+      margin-top: 20px;
+      font-size: 40px;
+      animation: scrollAnim 1.5s infinite;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
   <div class="scanlines"></div>
-
   <canvas id="arrow-canvas"></canvas>
 
   <div class="container">
-    <h1>Projects Timeline</h1>
-    <div class="timeline">
-      <div class="project" data-url="project1.html" tabindex="0" role="button" aria-label="Project 1: Energy Tile">
-        <p class="project-title">Project 1: Energy Tile</p>
-        <p class="project-desc">A floor tile that generates electricity from footsteps.</p>
-      </div>
-      <div class="project" data-url="project2.html" tabindex="0" role="button" aria-label="Project 2: Water Propulsion">
-        <p class="project-title">Project 2: Water Propulsion</p>
-       
+    <h1>My Projects Timeline</h1>
+    <ul class="timeline">
+      <li data-url="project1.html">Project 1 - Energy Tile</li>
+      <li data-url="project2.html">Project 2 - Water Propulsion</li>
+      <li data-url="project3.html">Project 3 - Robotics Mentor</li>
+      <!-- Add more projects here easily -->
+    </ul>
+  </div>
+
+  <!-- Fax Loading Screen -->
+  <div id="fax-loading">
+    <div id="fax-box">
+      .----------------.<br>
+      /                \<br>
+      |  FAXING DATA... |<br>
+      \________________/<br>
+      <div id="scroll-icon">⌄⌄⌄</div>
+    </div>
+  </div>
+
+  <script>
+    // Arrow vector background code (same as your code)
+    const canvas = document.getElementById('arrow-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let mouse = { x: null, y: null };
+    let arrows = [];
+    const spacing = 20;
+    const arrowSize = 6;
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      init();
+    }
+
+    window.addEventListener('resize', resize);
+
+    window.addEventListener('mousemove', e => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    class Arrow {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.angle = Math.PI / 2;
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+
+        ctx.beginPath();
+        ctx.moveTo(-arrowSize / 2, 0);
+        ctx.lineTo(arrowSize / 2, 0);
+        ctx.lineTo(arrowSize / 4, -arrowSize / 4);
+        ctx.moveTo(arrowSize / 2, 0);
+        ctx.lineTo(arrowSize / 4, arrowSize / 4);
+
+        const distance = this.getDistanceToMouse();
+        const maxDist = 150;
+        const clampedDist = Math.min(distance, maxDist);
+        const ratio = 1 - clampedDist / maxDist;
+
+        const red = Math.floor(ratio * 255);
+        const green = Math.floor((1 - ratio) * 255);
+
+        ctx.strokeStyle = `rgb(${red}, ${green}, 0)`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      update() {
+        if (mouse.x === null || mouse.y === null) {
+          this.angle += (Math.PI / 2 - this.angle) * 0.05;
+          return;
+        }
+        let dx = mouse.x - this.x;
+        let dy = mouse.y - this.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        const maxDist = 150;
+        if (distance < maxDist) {
+          let targetAngle = Math.atan2(dy, dx);
+          let influence = (maxDist - distance) / maxDist;
+          this.angle += (targetAngle - this.angle) * influence * 0.3;
+        } else {
+          this.angle += (Math.PI / 2 - this.angle) * 0.05;
+        }
+      }
+
+      getDistanceToMouse() {
+        if (mouse.x === null || mouse.y === null) return Infinity;
+        let dx = mouse.x - this.x;
+        let dy = mouse.y - this.y;
+        return Math.sqrt(dx * dx + dy * dy);
+      }
+    }
+
+    function init() {
+      arrows = [];
+      for(let x = 0; x < canvas.width; x += spacing) {
+        for(let y = 0; y < canvas.height; y += spacing) {
+          arrows.push(new Arrow(x, y));
+        }
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      arrows.forEach(arrow => {
+        arrow.update();
+        arrow.draw();
+      });
+      requestAnimationFrame(animate);
+    }
+
+    resize();
+    animate();
+
+    // Fax loading + navigation logic
+    const faxLoading = document.getElementById('fax-loading');
+    const timelineItems = document.querySelectorAll('ul.timeline li');
+
+    timelineItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const url = item.getAttribute('data-url');
+        if(!url) return;
+
+        // Show fax loading
+        faxLoading.classList.add('show');
+
+        // Disable scrolling while loading
+        document.body.style.overflow = 'hidden';
+
+        // After 3.5 seconds, navigate to project page
+        setTimeout(() => {
+          window.location.href = url;
+        }, 3500);
+      });
+    });
+  </script>
+</body>
+</html>
