@@ -265,6 +265,14 @@
 
     init();
     animate();
+    // Auto-show fax animation on load
+window.addEventListener('load', () => {
+  fax.classList.add('show');
+  setTimeout(() => {
+    fax.classList.remove('show');
+  }, 3000);
+});
+
 
     // FAX TRANSITION
     const items = document.querySelectorAll('.timeline li');
