@@ -2,35 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Projects Timeline</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Projects — Kevin OS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
   <style>
     html, body {
       margin: 0;
       padding: 0;
-      height: 100%;
       background: #000;
       color: #00ff00;
       font-family: 'VT323', monospace;
       overflow: hidden;
-      user-select: none;
-    }
-
-    #arrow-canvas {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      z-index: 0;
-      pointer-events: none;
     }
 
     .scanlines::before {
       content: '';
       position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      pointer-events: none;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       background: repeating-linear-gradient(
         to bottom,
         rgba(0, 255, 0, 0.03),
@@ -38,112 +29,111 @@
         transparent 1px,
         transparent 3px
       );
-      z-index: 9999;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    #arrow-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
     }
 
     .container {
       position: relative;
       z-index: 1;
-      max-width: 900px;
-      margin: 50px auto;
+      max-width: 800px;
+      margin: 60px auto;
       padding: 20px;
-      height: calc(100vh - 100px);
-      overflow-y: auto;
-      box-sizing: border-box;
+      background: rgba(0, 0, 0, 0.8);
       border: 1px solid #00ff00;
-      background: rgba(0,0,0,0.7);
-      border-radius: 8px;
     }
 
     h1 {
-      margin-bottom: 30px;
       text-align: center;
-      font-size: 2.8rem;
-      border-bottom: 2px solid #00ff00;
-      padding-bottom: 8px;
+      font-size: 2.5em;
+      margin-bottom: 30px;
     }
 
     ul.timeline {
       list-style: none;
-      padding-left: 0;
-      margin: 0;
+      padding: 0;
     }
 
     ul.timeline li {
-      margin-bottom: 25px;
-      cursor: pointer;
-      padding: 12px 15px;
+      margin: 15px 0;
+      padding: 10px;
       border: 1px solid #00ff00;
-      border-radius: 5px;
-      transition: background-color 0.3s ease, color 0.3s ease;
-      user-select: none;
+      cursor: pointer;
+      transition: background 0.3s;
     }
 
     ul.timeline li:hover {
-      background-color: #00ff00;
+      background: #00ff00;
       color: #000;
-      font-weight: bold;
-      box-shadow: 0 0 10px #00ff00;
     }
 
-    /* Fax Loading Screen */
+    /* Fullscreen FAX-style Loader */
     #fax-loading {
       position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       background: #000;
-      color: #00ff00;
-      font-family: 'VT323', monospace;
-      font-size: 20px;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       flex-direction: column;
-      z-index: 10000;
-      pointer-events: none;
+      z-index: 1000;
       opacity: 0;
+      pointer-events: none;
       transition: opacity 0.3s ease;
-      white-space: pre-line;
     }
 
     #fax-loading.show {
       opacity: 1;
-      pointer-events: auto;
+      pointer-events: all;
     }
 
     .ascii-icon {
-      border: 2px solid #00ff00;
-      padding: 30px 40px;
-      background: rgba(0, 0, 0, 0.95);
-      box-shadow: 0 0 20px #00ff00;
       font-size: 16px;
-      max-width: 420px;
-      line-height: 1.3;
+      border: 2px solid #00ff00;
+      padding: 20px;
+      background: #000;
+      color: #00ff00;
+      box-shadow: 0 0 20px #00ff00;
+      animation: pulsebox 0.9s infinite alternate;
+      white-space: pre;
+      line-height: 1.4;
     }
 
-    #ascii-text {
-      white-space: pre-wrap;
-      animation: typing 2.5s steps(60, end);
-      overflow: hidden;
-      border-right: 2px solid #00ff00;
-      display: inline-block;
+    @keyframes pulsebox {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00 inset;
+      }
+      100% {
+        transform: scale(1.015);
+        box-shadow: 0 0 30px #00ff00, 0 0 50px #00ff00 inset;
+      }
     }
 
-    @keyframes typing {
-      from { width: 0; }
-      to { width: 100%; }
+    #scroll-icon {
+      font-size: 28px;
+      margin-top: 15px;
+      color: #00ff00;
+      animation: scrollAnim 1s infinite;
     }
 
     @keyframes scrollAnim {
       0% { transform: translateY(0); opacity: 1; }
-      50% { transform: translateY(10px); opacity: 0.5; }
+      50% { transform: translateY(8px); opacity: 0.5; }
       100% { transform: translateY(0); opacity: 1; }
-    }
-
-    #scroll-icon {
-      margin-top: 20px;
-      font-size: 40px;
-      animation: scrollAnim 1.5s infinite;
     }
   </style>
 </head>
@@ -154,34 +144,36 @@
   <div class="container">
     <h1>My Projects Timeline</h1>
     <ul class="timeline">
-      <li data-url="project1.html">Project 1 - Energy Tile</li>
-      <li data-url="project2.html">Project 2 - Water Propulsion</li>
-      <li data-url="project3.html">Project 3 - Robotics Mentor</li>
+      <li data-url="project1.html">🧪 Energy Tile</li>
+      <li data-url="project2.html">🚤 Water Propulsion</li>
+      <li data-url="project3.html">🤖 Robotics Mentor</li>
     </ul>
   </div>
 
-
- <!-- Fax Loading Overlay -->
-<div id="fax-loading">
-  <div class="ascii-icon pulsing-box">
-    <pre id="ascii-text">
- ____________________________
-| :::::::::::::::::::::::::: |
-| > FAXING FILE...           |
-|============================|
-||   ████████████████████   ||
-||                          ||
-||   /home/kevin/portfolio  ||
-||     -> vector-grid.js    ||
-|============================|
-|____________________________|
-    </pre>
-    <div id="scroll-icon">⌄⌄⌄</div>
+  <!-- FULLSCREEN FAX ANIMATION -->
+  <div id="fax-loading">
+    <div class="ascii-icon">
+<pre>
+ ________________________________________
+| :::::::::::::::::::::::::::::::::::::: |
+| > FAXING FILE... PLEASE STAND BY...    |
+|========================================|
+||   ████████████████████████████████   ||
+||   ████████████████████████████████   ||
+||                                      ||
+||   /home/kevin/portfolio/projects     ||
+||     -> uploading project-file.html   ||
+||     -> sending metadata packet...    ||
+||     -> encrypting 256-bit stream...  ||
+|========================================|
+|__________TRANSMISSION IN PROGRESS______|
+</pre>
+      <div id="scroll-icon">⌄⌄⌄</div>
+    </div>
   </div>
-</div>
 
   <script>
-    // Vector Arrow Background
+    // VECTOR BACKGROUND
     const canvas = document.getElementById('arrow-canvas');
     const ctx = canvas.getContext('2d');
     let mouse = { x: null, y: null };
@@ -233,17 +225,14 @@
       }
 
       update() {
-        if (mouse.x === null || mouse.y === null) {
-          this.angle += (Math.PI / 2 - this.angle) * 0.05;
-          return;
-        }
+        if (mouse.x === null || mouse.y === null) return;
         let dx = mouse.x - this.x;
         let dy = mouse.y - this.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
+        let dist = Math.sqrt(dx * dx + dy * dy);
         const maxDist = 150;
-        if (distance < maxDist) {
+        if (dist < maxDist) {
           let targetAngle = Math.atan2(dy, dx);
-          let influence = (maxDist - distance) / maxDist;
+          let influence = (maxDist - dist) / maxDist;
           this.angle += (targetAngle - this.angle) * influence * 0.3;
         } else {
           this.angle += (Math.PI / 2 - this.angle) * 0.05;
@@ -252,9 +241,7 @@
 
       getDistanceToMouse() {
         if (mouse.x === null || mouse.y === null) return Infinity;
-        let dx = mouse.x - this.x;
-        let dy = mouse.y - this.y;
-        return Math.sqrt(dx * dx + dy * dy);
+        return Math.hypot(mouse.x - this.x, mouse.y - this.y);
       }
     }
 
@@ -279,21 +266,17 @@
     init();
     animate();
 
-    // Fax File Loader Logic
-    const faxLoading = document.getElementById('fax-loading');
-    const timelineItems = document.querySelectorAll('ul.timeline li');
+    // FAX TRANSITION
+    const items = document.querySelectorAll('.timeline li');
+    const fax = document.getElementById('fax-loading');
 
-    timelineItems.forEach(item => {
+    items.forEach(item => {
       item.addEventListener('click', () => {
-        const url = item.getAttribute('data-url');
-        if (!url) return;
-
-        faxLoading.classList.add('show');
-        document.body.style.overflow = 'hidden';
-
+        fax.classList.add('show');
         setTimeout(() => {
-          window.location.href = url;
-        }, 4000); // wait for typing animation + scroll
+          const url = item.getAttribute('data-url');
+          if (url) window.location.href = url;
+        }, 3000);
       });
     });
   </script>
