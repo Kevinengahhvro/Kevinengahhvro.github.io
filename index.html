@@ -1,11 +1,10 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>System Booting...</title>
-  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
   <style>
     html, body {
       margin: 0;
@@ -26,6 +25,8 @@
       padding: 20px;
       box-sizing: border-box;
       animation: flicker 0.15s infinite;
+      white-space: pre-wrap;
+      user-select: none;
     }
 
     .scanlines::before {
@@ -53,7 +54,6 @@
 
     .line {
       margin-bottom: 8px;
-      white-space: nowrap;
     }
 
     .access {
@@ -67,27 +67,62 @@
   </style>
 </head>
 <body>
-  <div class="screen scanlines" id="boot-screen">
-    <div class="line">PhoenixBIOS 4.0 Release 6.0</div>
-    <div class="line">Copyright 1985-2002 Phoenix Technologies Ltd.</div>
-    <div class="line">All Rights Reserved</div>
-    <br />
-    <div class="line">Processor: iNTEL-x86 | 1337 MHz</div>
-    <div class="line">Memory Test: 65536K OK</div>
-    <div class="line">Detecting IDE Drives...</div>
-    <div class="line">Primary Master: Quantum Fireball CX 13.0A</div>
-    <div class="line">Primary Slave: Not Detected</div>
-    <br />
-    <div class="line">Press DEL to enter setup...</div>
-    <div class="line">Booting from CD-ROM...</div>
-    <div class="line">Loading Cold Neutron sources... OS</div>
-    <div class="line access">ACCESS GRANTED ▓▓▓▓▓▓▓▓▓▓▓▓▓</div>
-  </div>
+  <div class="screen scanlines" id="boot-screen"></div>
 
   <script>
-    setTimeout(() => {
-      window.location.href = "main.html"; // your main site file
-    }, 6000);
+    const lines = [
+      "PhoenixBIOS 4.0 Release 6.0",
+      "Copyright 1985-2002 Phoenix Technologies Ltd.",
+      "All Rights Reserved",
+      "",
+      "Processor: iNTEL-x86 | 1337 MHz",
+      "Memory Test: 65536K OK",
+      "Detecting IDE Drives...",
+      "Primary Master: Quantum Fireball CX 13.0A",
+      "Primary Slave: Not Detected",
+      "",
+      "Press DEL to enter setup...",
+      "Booting from CD-ROM...",
+      "Loading Cold Neutron sources... OS",
+      "ACCESS GRANTED ▓▓▓▓▓▓▓▓▓▓▓▓▓"
+    ];
+
+    const bootScreen = document.getElementById("boot-screen");
+
+    // Calculate total chars to type for timing
+    const totalChars = lines.reduce((sum, line) => sum + line.length + 1, 0); // +1 for newline
+
+    const totalDuration = 4000; // 4 seconds total
+    const typingDelay = totalDuration / totalChars;
+
+    let currentLine = 0;
+    let currentChar = 0;
+
+    function type() {
+      if (currentLine >= lines.length) {
+        // Done typing, redirect after short pause
+        setTimeout(() => {
+          window.location.href = "main.html";
+        }, 800);
+        return;
+      }
+
+      const line = lines[currentLine];
+      if (currentChar <= line.length) {
+        // Show up to currentChar characters of the current line + newline
+        bootScreen.textContent = lines.slice(0, currentLine).join("\n") + "\n" + line.substring(0, currentChar);
+        currentChar++;
+        setTimeout(type, typingDelay);
+      } else {
+        // Move to next line
+        currentLine++;
+        currentChar = 0;
+        setTimeout(type, typingDelay);
+      }
+    }
+
+    // Start typing after a tiny delay
+    setTimeout(type, 300);
   </script>
 </body>
 </html>
