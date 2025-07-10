@@ -2,81 +2,261 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Year 10 Work experience at USYD's School of Aerospace Engineering</title>
+  <title>Project 1 — Wind Tunnel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'VT323', monospace;
+      font-size: 20px;
+      background: #000;
+      color: #00ff00;
+      height: auto;
+      overflow-y: auto;
+    }
+
+    #arrow-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      padding: 40px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    h1, h2 {
+      border-bottom: 1px solid #00ff00;
+      padding-bottom: 5px;
+    }
+
+    .file-icon {
+      margin-top: 10px;
+      cursor: pointer;
+      display: inline-block;
+    }
+
+    .file-icon img {
+      width: 200px;
+      border: 1px solid #00ff00;
+    }
+
+    /* Draggable Window */
+    .draggable-window {
+      position: absolute;
+      top: 120px;
+      left: 120px;
+      width: 500px;
+      background: #000;
+      border: 2px solid #00ff00;
+      box-shadow: 0 0 15px #00ff00;
+      z-index: 1000;
+    }
+
+    .title-bar {
+      background: #003300;
+      padding: 5px 10px;
+      font-weight: bold;
+      color: #00ff00;
+      display: flex;
+      justify-content: space-between;
+      cursor: move;
+    }
+
+    .window-content {
+      padding: 10px;
+      max-height: 400px;
+      overflow: auto;
+    }
+
+    /* Retro Scrollbars */
+    ::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #000;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #00ff00;
+      border-radius: 6px;
+      border: 2px solid #003300;
+      box-shadow: 0 0 5px #00ff00;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #33ff33;
+    }
+  </style>
 </head>
 <body>
-  <canvas id="arrow-canvas"></canvas>
 
-  <div class="content">
-    <h1>Year 10 Work experience at USYD's School of Aerospace Engineering</h1>
-    <p>
-      During Year 10 I found out that there was an international publishing program for papers made by young students!
-      Severely interested by this I decided to look for ideas that I could do, the idea i was working on was the physcological implications of in-game lootboxes.
-      I quickly got bored of the idea, and found inspiration in wind tunnels. With this new profound inspiration, I wanted to write a paper on which car spoilers
-      help the car to reduce lift and drag on cars. Cold emailing a professor at USYD (Ben Thornber) I was told that before doing 
-      wind tunnel testing for the models, it would be best to do run them through Computational Fluid Dynamics (CFD) first. I was also
-      told that CFD is more of a 2nd year of Aeronautical Engineer thing to learn. 
-      
-    </p>
+<canvas id="arrow-canvas"></canvas>
 
-  <h2>🖼️ Wind Tunnel Test Setup</h2>
-<div class="file-icon" onclick="openWindow('image', 'Wind Tunnel Test', '<img src="main/rudimentary-windtunnel.jpg" alt=\'Wind Tunnel Image\' style=\'width:100%; border:1px solid #00ff00\' />')">
-  <img src="main/rudimentary-windtunnel.jpg" alt="Wind Tunnel Thumbnail" style="width: 200px; border: 1px solid #00ff00;" />
-</div>
+<div class="content">
+  <h1>🌀 Rudimentary Wind Tunnel Test</h1>
+  <p>This is an experimental setup designed to evaluate air flow dynamics using basic 3D printed guides and fans.</p>
 
-
-    <h2>🎥 Video</h2>
-    <div class="file-icon" onclick="openWindow('video', 'Demo Video', '<video src=\'Email/running test.mp4' controls autoplay style=\'width:100%\'></video>')">
-      <img src="Email/3d Scanning.jpg" />
-    </div>
-
-    <h2>📄 PDF</h2>
-    <div class="file-icon" onclick="openWindow('pdf', 'Research Paper', '<iframe src=\'your-document.pdf\' width=\'100%\' height=\'400px\'></iframe>')">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg" />
-    </div>
-
-    <p><a href="projects.html">← Back to Projects</a></p>
+  <h2>🖼️ Image</h2>
+  <div class="file-icon" onclick="openWindow('image', 'Wind Tunnel Test', '<img src=\'rudimentary-windtunnel.jpg\' style=\'width:100%; border:1px solid #00ff00\' />')">
+    <img src="rudimentary-windtunnel.jpg" alt="Thumbnail" />
   </div>
 
+  <h2>🎥 Video</h2>
+  <div class="file-icon" onclick="openWindow('video', 'Video Demo', '<video src=\'demo.mp4\' controls autoplay style=\'width:100%\'></video>')">
+    <img src="video-thumb.jpg" alt="Video thumbnail" />
+  </div>
 
-  <script src="script.js"></script> 
-  <script>
-function openWindow(type, title, content) {
-  const win = document.createElement('div');
-  win.className = 'draggable-window ' + type;
-  win.innerHTML = `
-    <div class="title-bar">
-      <span>${title}</span>
-      <button onclick="this.closest('.draggable-window').remove()">X</button>
-    </div>
-    <div class="window-content">${content}</div>
-  `;
-  document.body.appendChild(win);
+  <h2>📄 PDF</h2>
+  <div class="file-icon" onclick="openWindow('pdf', 'My Report', '<iframe src=\'report.pdf\' style=\'width:100%; height:400px; border:none;\'></iframe>')">
+    <img src="pdf-icon.png" alt="PDF icon" />
+  </div>
 
-  // Basic drag functionality
-  const titleBar = win.querySelector('.title-bar');
-  let isDragging = false;
-  let offsetX, offsetY;
+  <p><a href="projects.html">← Back to Projects</a></p>
+</div>
 
-  titleBar.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    offsetX = e.clientX - win.offsetLeft;
-    offsetY = e.clientY - win.offsetTop;
+<!-- JavaScript for draggable window and background -->
+<script>
+  // Vector arrows background
+  const canvas = document.getElementById('arrow-canvas');
+  const ctx = canvas.getContext('2d');
+  let mouse = { x: null, y: null };
+  let arrows = [];
+  const spacing = 20;
+  const arrowSize = 6;
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    init();
   });
 
-  document.addEventListener('mouseup', () => isDragging = false);
-  document.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-      win.style.left = (e.clientX - offsetX) + 'px';
-      win.style.top = (e.clientY - offsetY) + 'px';
+  window.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+  class Arrow {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+      this.angle = Math.PI / 2;
     }
-  });
-}
-</script>
 
+    draw() {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.angle);
+      ctx.beginPath();
+      ctx.moveTo(-arrowSize / 2, 0);
+      ctx.lineTo(arrowSize / 2, 0);
+      ctx.lineTo(arrowSize / 4, -arrowSize / 4);
+      ctx.moveTo(arrowSize / 2, 0);
+      ctx.lineTo(arrowSize / 4, arrowSize / 4);
+      const distance = this.getDistanceToMouse();
+      const maxDist = 150;
+      const clampedDist = Math.min(distance, maxDist);
+      const ratio = 1 - clampedDist / maxDist;
+      const red = Math.floor(ratio * 255);
+      const green = Math.floor((1 - ratio) * 255);
+      ctx.strokeStyle = `rgb(${red}, ${green}, 0)`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    update() {
+      if (mouse.x === null || mouse.y === null) {
+        this.angle += (Math.PI / 2 - this.angle) * 0.05;
+        return;
+      }
+      let dx = mouse.x - this.x;
+      let dy = mouse.y - this.y;
+      let distance = Math.sqrt(dx * dx + dy * dy);
+      const maxDist = 150;
+      if (distance < maxDist) {
+        let targetAngle = Math.atan2(dy, dx);
+        let influence = (maxDist - distance) / maxDist;
+        this.angle += (targetAngle - this.angle) * influence * 0.3;
+      } else {
+        this.angle += (Math.PI / 2 - this.angle) * 0.05;
+      }
+    }
+
+    getDistanceToMouse() {
+      if (mouse.x === null || mouse.y === null) return Infinity;
+      let dx = mouse.x - this.x;
+      let dy = mouse.y - this.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+  }
+
+  function init() {
+    arrows = [];
+    for (let x = 0; x < canvas.width; x += spacing) {
+      for (let y = 0; y < canvas.height; y += spacing) {
+        arrows.push(new Arrow(x, y));
+      }
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    arrows.forEach(a => {
+      a.update();
+      a.draw();
+    });
+    requestAnimationFrame(animate);
+  }
+
+  init();
+  animate();
+
+  // Draggable popup windows
+  function openWindow(type, title, content) {
+    const win = document.createElement('div');
+    win.className = 'draggable-window ' + type;
+    win.innerHTML = `
+      <div class="title-bar">
+        <span>${title}</span>
+        <button onclick="this.closest('.draggable-window').remove()">X</button>
+      </div>
+      <div class="window-content">${content}</div>
+    `;
+    document.body.appendChild(win);
+
+    // Drag logic
+    const titleBar = win.querySelector('.title-bar');
+    let isDragging = false, offsetX = 0, offsetY = 0;
+
+    titleBar.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      offsetX = e.clientX - win.offsetLeft;
+      offsetY = e.clientY - win.offsetTop;
+    });
+
+    document.addEventListener('mouseup', () => isDragging = false);
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        win.style.left = (e.clientX - offsetX) + 'px';
+        win.style.top = (e.clientY - offsetY) + 'px';
+      }
+    });
+  }
+</script>
 </body>
 </html>
-
