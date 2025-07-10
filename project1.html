@@ -51,7 +51,6 @@
       border: 1px solid #00ff00;
     }
 
-    /* Draggable Window */
     .draggable-window {
       position: absolute;
       top: 120px;
@@ -79,7 +78,6 @@
       overflow: auto;
     }
 
-    /* Retro Scrollbars */
     ::-webkit-scrollbar {
       width: 12px;
     }
@@ -109,26 +107,24 @@
   <p>This is an experimental setup designed to evaluate air flow dynamics using basic 3D printed guides and fans.</p>
 
   <h2>🖼️ Image</h2>
-  <div class="file-icon" onclick="openWindow('image', 'rudimentary-windtunnel', '<img src='rudimentary-windtunnel.jpg\' style=\'width:100%; border:1px solid #00ff00\' />')">
+  <div class="file-icon" onclick="openWindow('image', 'Wind Tunnel Image', '<img src=&quot;rudimentary-windtunnel.jpg&quot; style=&quot;width:100%; border:1px solid #00ff00;&quot; />')">
     <img src="rudimentary-windtunnel.jpg" alt="rudimentary-windtunnel.jpg" />
   </div>
 
   <h2>🎥 Video</h2>
-  <div class="file-icon" onclick="openWindow('video', 'running test', '<video src=\'Email/running test.mp4\' controls autoplay style=\'width:100%\'></video>')">
-    <img src=".jpg" alt="Video thumbnail" />
+  <div class="file-icon" onclick="openWindow('video', 'Running Test', '<video src=&quot;Email/running%20test.mp4&quot; controls autoplay style=&quot;width:100%; max-height:400px; border:1px solid #00ff00;&quot;></video>')">
+    <img src="video-icon.png" alt="Video thumbnail" />
   </div>
 
   <h2>📄 PDF</h2>
-  <div class="file-icon" onclick="openWindow('pdf', 'My Report', '<iframe src=\'report.pdf\' style=\'width:100%; height:400px; border:none;\'></iframe>')">
+  <div class="file-icon" onclick="openWindow('pdf', 'My Report', '<iframe src=&quot;report.pdf&quot; style=&quot;width:100%; height:400px; border:none;&quot;></iframe>')">
     <img src="pdf-icon.png" alt="PDF icon" />
   </div>
 
   <p><a href="projects.html">← Back to Projects</a></p>
 </div>
 
-<!-- JavaScript for draggable window and background -->
 <script>
-  // Vector arrows background
   const canvas = document.getElementById('arrow-canvas');
   const ctx = canvas.getContext('2d');
   let mouse = { x: null, y: null };
@@ -226,7 +222,6 @@
   init();
   animate();
 
-  // Draggable popup windows
   function openWindow(type, title, content) {
     const win = document.createElement('div');
     win.className = 'draggable-window ' + type;
@@ -239,7 +234,6 @@
     `;
     document.body.appendChild(win);
 
-    // Drag logic
     const titleBar = win.querySelector('.title-bar');
     let isDragging = false, offsetX = 0, offsetY = 0;
 
