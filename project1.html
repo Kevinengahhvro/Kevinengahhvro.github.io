@@ -42,7 +42,41 @@
   </div>
 
 
-  <script src="script.js"></script>
+  <script src="script.js"></script> 
+  <script>
+function openWindow(type, title, content) {
+  const win = document.createElement('div');
+  win.className = 'draggable-window ' + type;
+  win.innerHTML = `
+    <div class="title-bar">
+      <span>${title}</span>
+      <button onclick="this.closest('.draggable-window').remove()">X</button>
+    </div>
+    <div class="window-content">${content}</div>
+  `;
+  document.body.appendChild(win);
+
+  // Basic drag functionality
+  const titleBar = win.querySelector('.title-bar');
+  let isDragging = false;
+  let offsetX, offsetY;
+
+  titleBar.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    offsetX = e.clientX - win.offsetLeft;
+    offsetY = e.clientY - win.offsetTop;
+  });
+
+  document.addEventListener('mouseup', () => isDragging = false);
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      win.style.left = (e.clientX - offsetX) + 'px';
+      win.style.top = (e.clientY - offsetY) + 'px';
+    }
+  });
+}
+</script>
+
 </body>
 </html>
 
