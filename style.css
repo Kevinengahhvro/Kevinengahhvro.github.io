@@ -125,4 +125,31 @@ a:hover {
     box-shadow: 0 0 24px #00ff00, 0 0 40px #00ff00 inset;
   }
 }
+.draggable-window {
+  position: absolute;
+  top: 100px;
+  left: 100px;
+  background: #000;
+  color: #00ff00;
+  border: 2px solid #00ff00;
+  width: 400px;
+  z-index: 999;
+  box-shadow: 0 0 20px #00ff00;
+  font-family: 'VT323', monospace;
+}
+
+.draggable-window .title-bar {
+  background: #001100;
+  padding: 5px 10px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  cursor: move;
+}
+
+.draggable-window .window-content {
+  padding: 10px;
+  max-height: 400px;
+  overflow: auto;
+}
 
