@@ -105,10 +105,22 @@ a:hover {
   cursor: pointer;
 }
 
-/* File type colors */
-.image-window { border-color: lime; box-shadow: 0 0 10px lime; }
-.video-window { border-color: magenta; box-shadow: 0 0 10px magenta; }
-.pdf-window   { border-color: cyan; box-shadow: 0 0 10px cyan; }
+/* FILE TYPE COLOR GLOWS */
+.image-window {
+  border-color: lime;
+  box-shadow: 0 0 15px lime;
+}
+
+.video-window {
+  border-color: magenta;
+  box-shadow: 0 0 15px magenta;
+}
+
+.pdf-window {
+  border-color: cyan;
+  box-shadow: 0 0 15px cyan;
+}
+
 
 .pulsing-box {
   animation: pulsebox 1.2s ease-in-out infinite alternate;
