@@ -101,7 +101,7 @@ let zIndex = 200;
 
 function openWindow(type, title, contentHTML) {
   const win = document.createElement('div');
-  win.className = `window ${type}-window`;
+  win.className = 'draggable-window ' + type + '-window';
   win.style.top = '100px';
   win.style.left = '100px';
   win.style.zIndex = ++zIndex;
