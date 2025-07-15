@@ -106,184 +106,191 @@
   <h1> Year 11 ANSTO's OPAL Reactor Cherenkov Radiation analysis </h1>
   <p> 
   </p>
-  <button id="launchSimBtn">⚛️ Launch Cherenkov Simulator</button>
-  <p><a href="projects.html" style="color:#0ff; text-decoration:none;">← Back to Projects</a></p>
-</div>
+ <button id="launchSimBtn">⚛️ Launch Cherenkov Simulator</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/examples/js/controls/OrbitControls.min.js"></script>
 
 <script>
 (() => {
-  const n = 1.33; // refractive index of water
-  let simWin, renderer, scene, camera, controls;
-  let moleculesGroup, electron, cone, coneMat, coneWireframeMat;
-  let betaSlider, betaVal, beta = 0.8;
-  let electronMat, electronWireframeMat;
-  let particles = [];
-  let polarisationArrows = [];
+  let simWin, scene, camera, renderer, controls;
+  let moleculesGroup, electron, cone;
+  let betaSlider, betaVal, wireframeElectronCB, wireframeConeCB;
+  let beta = 0.8;
+  const n = 1.33; // Refractive index of water
+  const particles = [];
+  const polarisationArrows = [];
+  let animationId;
 
-  function createWaterMolecule() {
-    const mol = new THREE.Object3D();
+  const electronMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+  const electronWireframeMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
+  const coneMat = new THREE.MeshPhongMaterial({ color: 0x3399ff, opacity: 0.6, transparent: true, side: THREE.DoubleSide });
+  const coneWireframeMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.8 });
 
-    // Materials
-    const oMat = new THREE.MeshPhongMaterial({ color: 0xff0d0d });
-    const hMat = new THREE.MeshPhongMaterial({ color: 0xffffff });
-
-    // Oxygen
-    const oxygen = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 16), oMat);
-    mol.add(oxygen);
-
-    // Hydrogens
-    const bondAngle = 104.5 * Math.PI / 180;
-    const r = 1;
-    const h1 = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), hMat);
-    const h2 = h1.clone();
-    h1.position.set(r * Math.cos(-bondAngle/2), r * Math.sin(-bondAngle/2), 0);
-    h2.position.set(r * Math.cos(bondAngle/2), r * Math.sin(bondAngle/2), 0);
-    mol.add(h1, h2);
-
-    return mol;
+  // Create a polarisation arrow helper (small blue arrow)
+  function createPolarisationArrow(angle) {
+    const dir = new THREE.Vector3(1, 0, 0);
+    const origin = new THREE.Vector3(0, 0, 0);
+    const length = 2;
+    const color = 0x00ffff;
+    const arrow = new THREE.ArrowHelper(dir, origin, length, color);
+    return arrow;
   }
 
   function spawnPhotonParticle() {
-    const particleMat = new THREE.MeshBasicMaterial({ color: 0x33ccff, transparent: true, opacity: 0.9 });
-    const particle = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), particleMat);
+    if (!scene) return;
+    const geometry = new THREE.SphereGeometry(0.1, 8, 8);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ccff, transparent: true, opacity: 0.7 });
+    const particle = new THREE.Mesh(geometry, material);
     particle.position.copy(electron.position);
-    particle.life = 1.0;
+    particle.position.x -= 1 + Math.random() * 0.5;
+    particle.life = 1;
     scene.add(particle);
     particles.push(particle);
-  }
-
-  function createPolarisationArrow(angle) {
-    const dir = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
-    const origin = new THREE.Vector3(0, 0, 0);
-    const length = 2;
-    const hex = 0x00ffff;
-    const arrowHelper = new THREE.ArrowHelper(dir, origin, length, hex, 0.5, 0.3);
-    return arrowHelper;
   }
 
   function openCherenkovSim() {
     if (document.querySelector('.draggable-window')) return;
 
+    // Popup window
     simWin = document.createElement('div');
     simWin.className = 'draggable-window';
     simWin.innerHTML = `
       <div class="title-bar">
-        <span>⚛️ 3D Cherenkov Simulator</span>
+        ⚛️ 3D Cherenkov Simulator
         <button id="close3d">X</button>
       </div>
       <div id="threeContainer"></div>
-      <div id="controlsPanel">
-        Speed (β): <input type="range" id="betaSlider" min="0.5" max="0.99" step="0.01" value="0.8">
-        <span id="betaVal">0.80</span>
-        <label><input type="checkbox" id="wireframeElectron"> Wireframe Electron</label>
-        <label><input type="checkbox" id="wireframeCone"> Wireframe Cone</label>
+      <div id="uiPanel">
+        Speed (β): <input type="range" id="betaSlider" min="0.5" max="0.99" step="0.01" value="${beta}">
+        <span id="betaVal">${beta.toFixed(2)}</span><br><br>
+        <label>Electron Wireframe <input type="checkbox" id="wireframeElectron"></label>
+        <label>Cone Wireframe <input type="checkbox" id="wireframeCone"></label>
       </div>
     `;
     document.body.appendChild(simWin);
 
     // Close button
     simWin.querySelector('#close3d').onclick = () => {
-      cleanup();
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', onWindowResize);
+      if(renderer) {
+        renderer.dispose();
+        renderer.forceContextLoss();
+        renderer.domElement = null;
+        renderer = null;
+      }
+      if(scene) {
+        scene.clear();
+        scene = null;
+      }
       simWin.remove();
     };
 
-    // Draggable
-    const titleBar = simWin.querySelector('.title-bar');
-    let isDragging = false, offsetX = 0, offsetY = 0;
-    titleBar.addEventListener('mousedown', e => {
-      isDragging = true;
-      offsetX = e.clientX - simWin.offsetLeft;
-      offsetY = e.clientY - simWin.offsetTop;
+    // Draggable window logic
+    const title = simWin.querySelector('.title-bar');
+    let dragging = false, dx=0, dy=0;
+    title.addEventListener('mousedown', e => {
+      dragging = true; dx = e.clientX - simWin.offsetLeft; dy = e.clientY - simWin.offsetTop;
     });
-    document.addEventListener('mouseup', () => isDragging = false);
+    document.addEventListener('mouseup', () => dragging = false);
     document.addEventListener('mousemove', e => {
-      if (isDragging) {
-        simWin.style.left = Math.min(Math.max(0, e.clientX - offsetX), window.innerWidth - simWin.offsetWidth) + 'px';
-        simWin.style.top = Math.min(Math.max(0, e.clientY - offsetY), window.innerHeight - simWin.offsetHeight) + 'px';
+      if (dragging) {
+        simWin.style.left = Math.max(0, Math.min(window.innerWidth - simWin.offsetWidth, e.clientX - dx)) + 'px';
+        simWin.style.top = Math.max(0, Math.min(window.innerHeight - simWin.offsetHeight, e.clientY - dy)) + 'px';
       }
     });
 
-    // Three.js setup
     const container = simWin.querySelector('#threeContainer');
+    container.style.width = '100%';
+    container.style.height = '100%';
+    container.style.flex = '1';
+
+    // Renderer
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(simWin.clientWidth, simWin.clientHeight - 60); // minus title bar + controls height approx
+    renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
 
+    // Scene and Camera
     scene = new THREE.Scene();
-
-    camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(60, container.clientWidth/container.clientHeight, 0.1, 1000);
     camera.position.set(0, 20, 60);
 
+    // OrbitControls for drag/zoom
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+    controls.minDistance = 10;
+    controls.maxDistance = 200;
 
-    // Lighting
-    const pointLight = new THREE.PointLight(0x00ffff, 1.2);
-    pointLight.position.set(50, 50, 50);
-    scene.add(pointLight);
+    // Lights
+    const light = new THREE.PointLight(0x00ffff, 1.2);
+    light.position.set(50, 50, 50);
+    scene.add(light);
     scene.add(new THREE.AmbientLight(0x222222));
 
-    // Water molecules in 3D grid (7 x 5 x 5)
+    // Water molecules grid 3D (7 x 5 grid, z=0)
     moleculesGroup = new THREE.Group();
-    const spacing = 5;
-    for (let x = -3; x <= 3; x++) {
-      for (let y = -2; y <= 2; y++) {
-        for (let z = -2; z <= 2; z++) {
-          const mol = createWaterMolecule();
-          mol.position.set(x * spacing, y * spacing, z * spacing);
-          moleculesGroup.add(mol);
-        }
+    const oMat = new THREE.MeshPhongMaterial({ color: 0xff0d0d });
+    const hMat = new THREE.MeshPhongMaterial({ color: 0xffffff });
+    for(let i = -3; i <= 3; i++) {
+      for(let j = -2; j <= 2; j++) {
+        const mol = new THREE.Object3D();
+        const ox = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 16), oMat);
+        mol.add(ox);
+
+        const bondAngle = 104.5 * Math.PI/180;
+        const r = 1;
+
+        const h1 = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), hMat);
+        const h2 = h1.clone();
+        h1.position.set(r * Math.cos(-bondAngle/2), r * Math.sin(-bondAngle/2), 0);
+        h2.position.set(r * Math.cos(bondAngle/2), r * Math.sin(bondAngle/2), 0);
+        mol.add(h1, h2);
+
+        mol.position.set(i*6, j*6, 0);
+        moleculesGroup.add(mol);
       }
     }
     scene.add(moleculesGroup);
-
-    // Electron materials
-    electronMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
-    electronWireframeMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
 
     // Electron
     electron = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), electronMat);
     scene.add(electron);
 
-    // Cone materials
-    coneMat = new THREE.MeshPhongMaterial({ color: 0x3399ff, opacity: 0.6, transparent: true, side: THREE.DoubleSide });
-    coneWireframeMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, opacity: 0.6, transparent: true });
-
-    // Cherenkov cone
+    // Cherenkov Cone
     const coneGeom = new THREE.ConeGeometry(1, 1, 32, 1, true);
     cone = new THREE.Mesh(coneGeom, coneMat);
     cone.rotation.z = Math.PI;
-    cone.position.set(0, 0, 0);
+    cone.position.set(0,0,0);
     scene.add(cone);
 
-    // Polarisation arrows on base circle (8 arrows spinning)
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2;
-      const arrow = createPolarisationArrow(angle);
+    // Polarisation arrows (10 arrows)
+    for(let k=0; k<10; k++) {
+      const arrow = createPolarisationArrow(0);
       polarisationArrows.push(arrow);
       scene.add(arrow);
     }
 
-    // Controls bindings
+    // UI bindings
     betaSlider = simWin.querySelector('#betaSlider');
     betaVal = simWin.querySelector('#betaVal');
+    wireframeElectronCB = simWin.querySelector('#wireframeElectron');
+    wireframeConeCB = simWin.querySelector('#wireframeCone');
+
     betaSlider.value = beta;
     betaVal.textContent = beta.toFixed(2);
+
     betaSlider.oninput = () => {
       beta = parseFloat(betaSlider.value);
       betaVal.textContent = beta.toFixed(2);
     };
 
-    const wireframeElectronCB = simWin.querySelector('#wireframeElectron');
     wireframeElectronCB.onchange = () => {
       electron.material = wireframeElectronCB.checked ? electronWireframeMat : electronMat;
     };
-    const wireframeConeCB = simWin.querySelector('#wireframeCone');
+
     wireframeConeCB.onchange = () => {
       cone.material = wireframeConeCB.checked ? coneWireframeMat : coneMat;
     };
@@ -293,32 +300,28 @@
     animate();
   }
 
-  let animationId;
-
   function animate() {
     animationId = requestAnimationFrame(animate);
 
     const time = performance.now() * 0.001;
 
-    // Electron movement along X axis at speed proportional to beta
-    electron.position.set(time * 10, 0, 0);
+    // Move electron along X at speed proportional to beta
+    electron.position.set(time * 10 * beta, 0, 0);
 
-    // Cherenkov angle theta (if beta * n > 1)
-    if (beta * n > 1) {
+    // Calculate Cherenkov angle if beta*n >1
+    if(beta * n > 1) {
       const theta = Math.acos(1 / (beta * n));
-      cone.rotation.set(theta, Math.PI / 2, Math.PI);
+      cone.rotation.set(theta, Math.PI/2, Math.PI);
 
-      // Scale cone to electron distance and angle
       const length = electron.position.x;
       const radius = length * Math.tan(theta);
       cone.scale.set(radius, length, radius);
       cone.position.copy(electron.position);
-
       cone.visible = true;
 
-      // Polarisation arrows spin around cone base circle
+      // Spin polarisation arrows around cone base circle
       polarisationArrows.forEach((arrow, i) => {
-        const spinSpeed = 2; // radians/sec
+        const spinSpeed = 2; // rad/sec
         const baseRadius = length * Math.tan(theta);
         const angle = (performance.now() * 0.002 + (i / polarisationArrows.length) * Math.PI * 2) * spinSpeed;
         arrow.position.set(
@@ -333,7 +336,7 @@
       polarisationArrows.forEach(arrow => arrow.position.set(0, -9999, 0)); // hide offscreen
     }
 
-    // Rotate molecules slightly to face electron, then gently return
+    // Molecules rotate to face electron, then relax
     moleculesGroup.children.forEach(mol => {
       mol.lookAt(electron.position);
       mol.rotation.x += (-mol.rotation.x) * 0.05;
@@ -341,148 +344,35 @@
       mol.rotation.z += (-mol.rotation.z) * 0.05;
     });
 
-    // Spawn photon particles trailing electron
-    if (Math.random() < 0.1) spawnPhotonParticle();
+    // Spawn photon particles trailing electron randomly
+    if(Math.random() < 0.1) spawnPhotonParticle();
 
-    // Animate particles (fade out and move forward)
-    particles.forEach((p, i) => {
+    // Animate particles
+    for(let i=particles.length-1; i>=0; i--) {
+      const p = particles[i];
       p.position.x += 0.15;
       p.material.opacity -= 0.01;
       p.life -= 0.01;
-      if (p.life <= 0) {
+      if(p.life <= 0) {
         scene.remove(p);
         particles.splice(i, 1);
       }
-    });
+    }
 
     controls.update();
     renderer.render(scene, camera);
   }
 
   function onWindowResize() {
-    if (!renderer) return;
+    if(!renderer) return;
     const container = simWin.querySelector('#threeContainer');
     const width = container.clientWidth;
     const height = container.clientHeight;
-    camera.aspect = width / height;
+    camera.aspect = width/height;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
   }
 
-  function cleanup() {
-    cancelAnimationFrame(animationId);
-    window.removeEventListener('resize', onWindowResize);
-    if (renderer) {
-      renderer.dispose();
-      renderer.forceContextLoss();
-      renderer.domElement = null;
-      renderer = null;
-    }
-    if (scene) {
-      scene.clear();
-      scene = null;
-    }
-  }
-
-  // Magnetic arrow background
-  const canvas = document.getElementById('arrow-canvas');
-  const ctx = canvas.getContext('2d');
-  let mouse = { x: null, y: null };
-  let arrows = [];
-  const spacing = 20;
-  const arrowSize = 6;
-
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    initArrows();
-  });
-
-  window.addEventListener('mousemove', (e) => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-  });
-
-  class Arrow {
-    constructor(x, y) {
-      this.x = x;
-      this.y = y;
-      this.angle = Math.PI / 2;
-    }
-
-    draw() {
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.angle);
-      ctx.beginPath();
-      ctx.moveTo(-arrowSize / 2, 0);
-      ctx.lineTo(arrowSize / 2, 0);
-      ctx.lineTo(arrowSize / 4, -arrowSize / 4);
-      ctx.moveTo(arrowSize / 2, 0);
-      ctx.lineTo(arrowSize / 4, arrowSize / 4);
-      const distance = this.getDistanceToMouse();
-      const maxDist = 150;
-      const clampedDist = Math.min(distance, maxDist);
-      const ratio = 1 - clampedDist / maxDist;
-      const red = Math.floor(ratio * 255);
-      const green = Math.floor((1 - ratio) * 255);
-      ctx.strokeStyle = `rgb(${red}, ${green}, 0)`;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    update() {
-      if (mouse.x === null || mouse.y === null) {
-        this.angle += (Math.PI / 2 - this.angle) * 0.05;
-        return;
-      }
-      let dx = mouse.x - this.x;
-      let dy = mouse.y - this.y;
-      let distance = Math.sqrt(dx * dx + dy * dy);
-      const maxDist = 150;
-      if (distance < maxDist) {
-        let targetAngle = Math.atan2(dy, dx);
-        let influence = (maxDist - distance) / maxDist;
-        this.angle += (targetAngle - this.angle) * influence * 0.3;
-      } else {
-        this.angle += (Math.PI / 2 - this.angle) * 0.05;
-      }
-    }
-
-    getDistanceToMouse() {
-      if (mouse.x === null || mouse.y === null) return Infinity;
-      let dx = mouse.x - this.x;
-      let dy = mouse.y - this.y;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-  }
-
-  function initArrows() {
-    arrows = [];
-    for (let x = 0; x < canvas.width; x += spacing) {
-      for (let y = 0; y < canvas.height; y += spacing) {
-        arrows.push(new Arrow(x, y));
-      }
-    }
-  }
-
-  function animateArrows() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    arrows.forEach(a => {
-      a.update();
-      a.draw();
-    });
-    requestAnimationFrame(animateArrows);
-  }
-
-  initArrows();
-  animateArrows();
-
-  // Hook launch button
   document.getElementById('launchSimBtn').onclick = openCherenkovSim;
 })();
 </script>
