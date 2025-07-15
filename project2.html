@@ -207,47 +207,81 @@ function openCherenkovSim() {
       ctx.translate(mol.x, mol.y);
       ctx.rotate(mol.angle);
 
-      // Draw dipole/electron cloud cone behind molecule
+      // === Parameters for molecule ===
+      const bondLength = 20; // scaled length for bonds (~0.96 Angstrom)
+      const bondAngleDeg = 104.5;
+      const bondAngleRad = bondAngleDeg * Math.PI / 180;
+
+      // Positions of hydrogens relative to oxygen at (0,0)
+      const h1x = bondLength * Math.cos(-bondAngleRad / 2);
+      const h1y = bondLength * Math.sin(-bondAngleRad / 2);
+      const h2x = bondLength * Math.cos(bondAngleRad / 2);
+      const h2y = bondLength * Math.sin(bondAngleRad / 2);
+
+      // === Draw dipole arrow ===
+      const midX = (h1x + h2x) / 2;
+      const midY = (h1y + h2y) / 2;
+      const arrowLength = Math.sqrt(midX * midX + midY * midY) * 2.5;
+
+      ctx.save();
       ctx.beginPath();
+      ctx.strokeStyle = 'rgba(0, 255, 255, 0.7)';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = 'rgba(0, 255, 255, 0.5)';
+      ctx.shadowBlur = 8;
       ctx.moveTo(0, 0);
-      ctx.lineTo(-50, -20);
-      ctx.lineTo(-50, 20);
+      ctx.lineTo(midX * 2.5, midY * 2.5);
+      ctx.stroke();
+
+      // Arrowhead
+      const angle = Math.atan2(midY, midX);
+      const arrowHeadSize = 8;
+      ctx.beginPath();
+      ctx.moveTo(midX * 2.5, midY * 2.5);
+      ctx.lineTo(
+        midX * 2.5 - arrowHeadSize * Math.cos(angle - Math.PI / 6),
+        midY * 2.5 - arrowHeadSize * Math.sin(angle - Math.PI / 6)
+      );
+      ctx.lineTo(
+        midX * 2.5 - arrowHeadSize * Math.cos(angle + Math.PI / 6),
+        midY * 2.5 - arrowHeadSize * Math.sin(angle + Math.PI / 6)
+      );
       ctx.closePath();
-      const coneGradient = ctx.createLinearGradient(0, 0, -50, 0);
-      coneGradient.addColorStop(0, 'rgba(0, 255, 255, 0.2)');
-      coneGradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
-      ctx.fillStyle = coneGradient;
+      ctx.fillStyle = 'rgba(0, 255, 255, 0.7)';
       ctx.fill();
+      ctx.restore();
 
       // Oxygen atom (red)
       ctx.beginPath();
-      ctx.fillStyle = '#FF0000'; // red for oxygen
-      ctx.shadowColor = 'rgba(255, 0, 0, 0.7)';
-      ctx.shadowBlur = 10;
-      ctx.arc(0, 0, 12, 0, Math.PI * 2);
+      ctx.fillStyle = '#FF0D0D'; // bright red for oxygen
+      ctx.shadowColor = 'rgba(255, 13, 13, 0.8)';
+      ctx.shadowBlur = 15;
+      ctx.arc(0, 0, 14, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Bonds - simple lines from O to H atoms
-      ctx.strokeStyle = '#cccccc';
-      ctx.lineWidth = 3;
+      // Bonds (light gray)
       ctx.beginPath();
-      // Bond to first hydrogen
+      ctx.strokeStyle = '#AAAAAA';
+      ctx.lineWidth = 4;
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+      ctx.shadowBlur = 6;
       ctx.moveTo(0, 0);
-      ctx.lineTo(18 * Math.cos(-52.25 * Math.PI / 180), 18 * Math.sin(-52.25 * Math.PI / 180));
-      // Bond to second hydrogen
+      ctx.lineTo(h1x, h1y);
       ctx.moveTo(0, 0);
-      ctx.lineTo(18 * Math.cos(52.25 * Math.PI / 180), 18 * Math.sin(52.25 * Math.PI / 180));
+      ctx.lineTo(h2x, h2y);
       ctx.stroke();
+      ctx.shadowBlur = 0;
 
-      // Hydrogen atoms (white) at 104.5° apart (52.25° each side from vertical)
+      // Hydrogen atoms (white)
       ctx.beginPath();
-      ctx.fillStyle = '#FFFFFF'; // white for hydrogen
-      // First H
-      ctx.arc(18 * Math.cos(-52.25 * Math.PI / 180), 18 * Math.sin(-52.25 * Math.PI / 180), 6, 0, Math.PI * 2);
-      // Second H
-      ctx.arc(18 * Math.cos(52.25 * Math.PI / 180), 18 * Math.sin(52.25 * Math.PI / 180), 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.6)';
+      ctx.shadowBlur = 12;
+      ctx.arc(h1x, h1y, 8, 0, Math.PI * 2);
+      ctx.arc(h2x, h2y, 8, 0, Math.PI * 2);
       ctx.fill();
+      ctx.shadowBlur = 0;
 
       ctx.restore();
     });
