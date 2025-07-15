@@ -106,195 +106,140 @@
   <h1> Year 11 ANSTO's OPAL Reactor Cherenkov Radiation analysis </h1>
   <p> 
   </p>
+<button onclick="openCherenkovSim()">⚛️ Launch Cherenkov Simulator</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+
 <script>
 function openCherenkovSim() {
   if (document.querySelector('.draggable-window')) return;
 
+  // Popup window
   const simWin = document.createElement('div');
-  simWin.className = 'draggable-window';
-  simWin.style.width = '600px';
-  simWin.style.height = '420px';
-  simWin.style.position = 'fixed';
-  simWin.style.left = '50px';
-  simWin.style.top = '50px';
-  simWin.style.zIndex = '9999';
-  simWin.style.background = '#000';
-  simWin.style.border = '2px solid #00ffff';
-  simWin.style.boxShadow = '0 0 20px #00ffff';
-  simWin.style.display = 'flex';
-  simWin.style.flexDirection = 'column';
+  Object.assign(simWin.style, {
+    position: 'fixed', top: '50px', left: '50px',
+    width: '800px', height: '500px',
+    background: '#000', border: '3px solid #00ffff',
+    boxShadow: '0 0 20px #00ffff', zIndex: 9999,
+    display: 'flex', flexDirection: 'column'
+  });
   simWin.innerHTML = `
-    <div class="title-bar" style="background:#003333; color:#00ffff; padding:8px 12px; font-family:'VT323', monospace; font-weight:bold; cursor: move; display:flex; justify-content: space-between;">
-      <span>⚡ Cherenkov Radiation Simulator</span>
-      <button id="closeSim" style="background:#00ffff; color:#000; font-weight:bold; border:none; padding:4px 10px; cursor:pointer;">X</button>
+    <div class="title-bar" style="background:#001f2f;color:#0ff;padding:8px;cursor:move;display:flex;justify-content:space-between;align-items:center;font-family:VT323;">
+      <span>⚛️ 3D Cherenkov Simulator</span>
+      <button id="close3d" style="background:#0ff;color:#000;border:none;font-weight:bold;padding:4px 10px;cursor:pointer;">X</button>
     </div>
-    <canvas id="cherenkovCanvas" style="flex-grow:1; display:block;"></canvas>
-    <div style="background:#002222; padding:8px; color:#00ffff; font-family:'VT323', monospace;">
-      Speed: <input type="range" id="speedSlider" min="2" max="20" value="8" step="0.1" style="width:300px;">
-      <span id="speedVal">8.0</span>
-    </div>
-  `;
+    <div style="flex:1;display:flex;position:relative;">
+      <div id="threeContainer" style="flex:1;"></div>
+      <div style="position:absolute;bottom:10px;left:10px;background:#002222;padding:8px;color:#0ff;font-family:VT323;">
+        Speed (β): <input type="range" id="betaSlider" min="0.5" max="0.99" step="0.01" value="0.8">
+        <span id="betaVal">0.80</span>
+      </div>
+    </div>`;
   document.body.appendChild(simWin);
 
-  const closeBtn = simWin.querySelector('#closeSim');
-  closeBtn.onclick = () => simWin.remove();
+  simWin.querySelector('#close3d').onclick = () => simWin.remove();
 
-  // Draggable logic
-  const titleBar = simWin.querySelector('.title-bar');
-  let isDragging = false, offsetX = 0, offsetY = 0;
-  titleBar.addEventListener('mousedown', e => {
-    isDragging = true;
-    offsetX = e.clientX - simWin.getBoundingClientRect().left;
-    offsetY = e.clientY - simWin.getBoundingClientRect().top;
+  // Draggable
+  const title = simWin.querySelector('.title-bar');
+  let dragging = false, dx=0, dy=0;
+  title.addEventListener('mousedown', e => {
+    dragging = true; dx = e.clientX - simWin.offsetLeft; dy = e.clientY - simWin.offsetTop;
   });
-  document.addEventListener('mouseup', () => isDragging = false);
+  document.addEventListener('mouseup', () => dragging = false);
   document.addEventListener('mousemove', e => {
-    if (!isDragging) return;
-    let left = e.clientX - offsetX;
-    let top = e.clientY - offsetY;
-    simWin.style.left = Math.max(0, Math.min(window.innerWidth - simWin.offsetWidth, left)) + 'px';
-    simWin.style.top = Math.max(0, Math.min(window.innerHeight - simWin.offsetHeight, top)) + 'px';
+    if (dragging) {
+      simWin.style.left = Math.max(0, Math.min(window.innerWidth - simWin.offsetWidth, e.clientX - dx)) + 'px';
+      simWin.style.top = Math.max(0, Math.min(window.innerHeight - simWin.offsetHeight, e.clientY - dy)) + 'px';
+    }
   });
 
-  // Canvas
-  const canvas = simWin.querySelector('#cherenkovCanvas');
-  const ctx = canvas.getContext('2d');
-  function resizeCanvas() {
-    canvas.width = simWin.clientWidth;
-    canvas.height = simWin.clientHeight - titleBar.offsetHeight - simWin.lastElementChild.offsetHeight;
-  }
-  resizeCanvas();
-  new ResizeObserver(resizeCanvas).observe(simWin);
+  // Three.js setup
+  const container = simWin.querySelector('#threeContainer');
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  container.appendChild(renderer.domElement);
 
-  const electrons = [];
-  const waterMolecules = [];
-  const spacing = 100;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+  camera.position.set(0, 20, 60);
+  new THREE.OrbitControls(camera, renderer.domElement);
 
-  for (let x = 60; x < canvas.width; x += spacing) {
-    for (let y = 60; y < canvas.height; y += spacing) {
-      waterMolecules.push({ x, y, angle: 0, originalAngle: 0 });
+  const light = new THREE.PointLight(0x00ffff, 1.2);
+  light.position.set(50, 50, 50);
+  scene.add(light);
+  scene.add(new THREE.AmbientLight(0x222222));
+
+  // Water molecules
+  const molecules = new THREE.Group();
+  const oMat = new THREE.MeshPhongMaterial({ color: 0xff0d0d });
+  const hMat = new THREE.MeshPhongMaterial({ color: 0xffffff });
+  for (let i = -3; i <= 3; i++) {
+    for (let j = -2; j <= 2; j++) {
+      const mol = new THREE.Object3D();
+      const ox = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 16), oMat);
+      mol.add(ox);
+      const bondAngle = 104.5 * Math.PI / 180;
+      const r = 1;
+      const h1 = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), hMat);
+      const h2 = h1.clone();
+      h1.position.set(r * Math.cos(-bondAngle/2), r * Math.sin(-bondAngle/2), 0);
+      h2.position.set(r * Math.cos(bondAngle/2), r * Math.sin(bondAngle/2), 0);
+      mol.add(h1, h2);
+      mol.position.set(i * 6, j * 6, 0);
+      molecules.add(mol);
     }
   }
+  scene.add(molecules);
 
-  // Speed control
-  const slider = simWin.querySelector('#speedSlider');
-  const speedVal = simWin.querySelector('#speedVal');
-  let electronSpeed = parseFloat(slider.value);
-  slider.oninput = () => {
-    electronSpeed = parseFloat(slider.value);
-    speedVal.textContent = electronSpeed.toFixed(1);
-  };
+  // Electron
+  const electron = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), new THREE.MeshBasicMaterial({ color: 0x00ffff }));
+  scene.add(electron);
 
-  // Spawn electron
-  canvas.addEventListener('click', e => {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    electrons.push({
-      startX: x,
-      x: x,
-      y: y,
-      vx: electronSpeed,
-      alpha: 1,
-      trail: [],
-      coneAngle: Math.PI / 8 // fixed approx cone angle
-    });
+  // Cherenkov cone
+  const coneGeom = new THREE.ConeGeometry(1, 1, 32, 1, true);
+  const coneMat = new THREE.MeshPhongMaterial({ color: 0x3399ff, opacity: 0.6, transparent: true, side: THREE.DoubleSide });
+  const cone = new THREE.Mesh(coneGeom, coneMat);
+  cone.rotation.z = Math.PI;
+  cone.position.set(0,0,0);
+  scene.add(cone);
+
+  // Slider
+  const betaSlider = simWin.querySelector('#betaSlider');
+  const betaVal = simWin.querySelector('#betaVal');
+  let beta = parseFloat(betaSlider.value);
+  betaSlider.oninput = () => beta = parseFloat(betaSlider.value), betaVal.textContent = beta.toFixed(2);
+
+  window.addEventListener('resize', () => {
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    camera.aspect = container.clientWidth/container.clientHeight;
+    camera.updateProjectionMatrix();
   });
 
-  function drawCone(el) {
-    const dist = el.x - el.startX;
-    if (dist <= 0) return;
-    const coneLength = dist;
-    const coneWidth = coneLength * Math.tan(el.coneAngle);
-
-    ctx.save();
-    ctx.translate(el.x, el.y);
-    ctx.rotate(Math.PI); // reverse direction
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(coneLength, -coneWidth);
-    ctx.lineTo(coneLength, coneWidth);
-    ctx.closePath();
-
-    const grad = ctx.createLinearGradient(0, 0, coneLength, 0);
-    grad.addColorStop(0, 'rgba(0,200,255,0.7)');
-    grad.addColorStop(1, 'rgba(0,100,255,0)');
-    ctx.fillStyle = grad;
-    ctx.shadowColor = 'rgba(0,200,255,0.5)';
-    ctx.shadowBlur = 12;
-    ctx.fill();
-    ctx.restore();
-  }
-
-  function drawElectronTrail(el) {
-    el.trail.push({ x: el.x, y: el.y, alpha: el.alpha });
-    if (el.trail.length > 50) el.trail.shift();
-
-    el.trail.forEach((t, i) => {
-      const grad = ctx.createRadialGradient(t.x, t.y, 0, t.x, t.y, 10);
-      grad.addColorStop(0, `rgba(0,200,255,${t.alpha * 0.5})`);
-      grad.addColorStop(1, 'rgba(0,0,255,0)');
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(t.x, t.y, 6, 0, 2 * Math.PI);
-      ctx.fill();
-    });
-  }
-
-  function drawWaterMolecule(mol, electrons) {
-    let facing = false;
-    for (const el of electrons) {
-      const dx = el.x - mol.x;
-      const dy = el.y - mol.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 140) {
-        mol.angle = Math.atan2(dy, dx);
-        facing = true;
-        break;
-      }
-    }
-    if (!facing) mol.angle += (mol.originalAngle - mol.angle) * 0.1;
-
-    ctx.save();
-    ctx.translate(mol.x, mol.y);
-    ctx.rotate(mol.angle);
-
-    // Oxygen (red)
-    ctx.fillStyle = 'red';
-    ctx.beginPath();
-    ctx.arc(0, 0, 10, 0, 2 * Math.PI);
-    ctx.fill();
-
-    // Hydrogens (white)
-    ctx.fillStyle = 'white';
-    const bondLength = 18;
-    const bondAngle = 104.5 * Math.PI / 180;
-    const h1x = Math.cos(-bondAngle / 2) * bondLength;
-    const h1y = Math.sin(-bondAngle / 2) * bondLength;
-    const h2x = Math.cos(bondAngle / 2) * bondLength;
-    const h2y = Math.sin(bondAngle / 2) * bondLength;
-    ctx.beginPath();
-    ctx.arc(h1x, h1y, 6, 0, 2 * Math.PI);
-    ctx.arc(h2x, h2y, 6, 0, 2 * Math.PI);
-    ctx.fill();
-
-    ctx.restore();
-  }
+  let startTime = performance.now();
+  const n = 1.33;
 
   function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const t = (performance.now() - startTime) * 0.001;
+    electron.position.x = t * 10;
+    electron.position.y = 0;
+    electron.position.z = 0;
 
-    waterMolecules.forEach(mol => drawWaterMolecule(mol, electrons));
+    const v = beta;
+    const theta = Math.acos(1 / (beta * n));
+    cone.rotation.y = Math.PI / 2;
+    cone.rotation.x = theta;
 
-    for (let i = electrons.length - 1; i >= 0; i--) {
-      const el = electrons[i];
-      drawCone(el);
-      drawElectronTrail(el);
-      el.x += el.vx;
-      el.alpha -= 0.005;
-      if (el.alpha <= 0 || el.x > canvas.width + 50) electrons.splice(i, 1);
-    }
+    const length = electron.position.x;
+    cone.scale.set( length * Math.tan(theta), length, length * Math.tan(theta) );
+    cone.position.copy(electron.position);
 
+    molecules.children.forEach(mol => {
+      mol.lookAt(electron.position);
+      mol.rotation.x += ( -mol.rotation.x ) * 0.05;
+    });
+
+    renderer.render(scene, camera);
     requestAnimationFrame(animate);
   }
 
