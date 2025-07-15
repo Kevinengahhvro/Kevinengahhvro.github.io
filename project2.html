@@ -110,82 +110,89 @@
   
 
 <script>
-(() => {
-  const c = 299792458; // speed of light (not used directly but for reference)
-  const n = 1.33; // refractive index of water approx
+function openCherenkovSim() {
+  if (document.querySelector('.draggable-window')) return;
 
-  const simContainer = document.getElementById('simContainer');
-  const closeBtn = document.getElementById('closeBtn');
-  const speedRange = document.getElementById('speedRange');
-  const speedVal = document.getElementById('speedVal');
-  const canvas = document.getElementById('cherenkovCanvas');
-  const ctx = canvas.getContext('2d');
+  const simWin = document.createElement('div');
+  simWin.className = 'draggable-window';
+  simWin.style.cssText = `
+    position: fixed;
+    top: 60px;
+    left: 60px;
+    width: 90vw;
+    height: 80vh;
+    background: #000;
+    border: 3px solid #00ffff;
+    z-index: 9999;
+    box-shadow: 0 0 20px #00ffff;
+  `;
+  simWin.innerHTML = `
+    <div class="title-bar" style="background:#001f2f;color:#00ffff;font-family:'VT323',monospace;display:flex;justify-content:space-between;align-items:center;padding:10px;cursor:move;">
+      <span>⚛️ Cherenkov Radiation Simulator</span>
+      <button onclick="this.closest('.draggable-window').remove()" style="background:#00ffff;color:#000;border:none;padding:4px 10px;font-weight:bold;">X</button>
+    </div>
+    <canvas id="cherenkovCanvas" style="display:block;width:100%;height:calc(100% - 40px);"></canvas>
+  `;
+  document.body.appendChild(simWin);
 
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight - document.getElementById('titleBar').offsetHeight - document.getElementById('controls').offsetHeight;
-
-  // Resize handler
-  window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight - document.getElementById('titleBar').offsetHeight - document.getElementById('controls').offsetHeight;
+  // Make draggable
+  const titleBar = simWin.querySelector('.title-bar');
+  let isDragging = false, offsetX = 0, offsetY = 0;
+  titleBar.addEventListener('mousedown', e => {
+    isDragging = true;
+    offsetX = e.clientX - simWin.offsetLeft;
+    offsetY = e.clientY - simWin.offsetTop;
   });
+  document.addEventListener('mousemove', e => {
+    if (isDragging) {
+      simWin.style.left = `${e.clientX - offsetX}px`;
+      simWin.style.top = `${e.clientY - offsetY}px`;
+    }
+  });
+  document.addEventListener('mouseup', () => isDragging = false);
 
-  closeBtn.onclick = () => {
-    simContainer.remove();
-  };
+  // Canvas setup
+  const canvas = simWin.querySelector('#cherenkovCanvas');
+  const ctx = canvas.getContext('2d');
+  function resizeCanvas() {
+    canvas.width = simWin.clientWidth;
+    canvas.height = simWin.clientHeight - 40;
+  }
+  resizeCanvas();
+  new ResizeObserver(resizeCanvas).observe(simWin);
 
-  // Molecules grid
+  const electrons = [];
   const waterMolecules = [];
   const spacing = 130;
-  for(let x=60; x < canvas.width; x+= spacing) {
-    for(let y=60; y < canvas.height; y+= spacing) {
-      waterMolecules.push({x,y,angle:0,originalAngle:0});
+  for (let x = 60; x < canvas.width; x += spacing) {
+    for (let y = 60; y < canvas.height; y += spacing) {
+      waterMolecules.push({ x, y, angle: 0, originalAngle: 0 });
     }
   }
 
-  // Electrons array
-  const electrons = [];
-
-  // Electron speed β
-  let electronBeta = parseFloat(speedRange.value);
-
-  speedRange.oninput = () => {
-    electronBeta = parseFloat(speedRange.value);
-    speedVal.textContent = electronBeta.toFixed(3);
-  };
-
-  // On click spawn electron at mouse pos
   canvas.addEventListener('click', e => {
-    // Electron speed in px per frame (scaled)
-    // We scale speed arbitrarily so it looks good on canvas
-    const maxPxSpeed = 15;
-    const vx = electronBeta * maxPxSpeed;
-
     electrons.push({
       x: e.clientX,
       y: e.clientY,
-      vx: vx,
-      beta: electronBeta,
+      vx: 10,
       alpha: 1,
       trail: []
     });
   });
 
-  // Helper: Draw water molecule
   function drawWaterMolecule(ctx, mol, electronPositions) {
-    // Rotation toward closest electron within 180px radius
     let closestElectron = null;
     let minDist = 180;
     for (const el of electronPositions) {
       const dx = el.x - mol.x;
       const dy = el.y - mol.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if(dist < minDist) {
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < minDist) {
         minDist = dist;
         closestElectron = el;
       }
     }
-    if(closestElectron) {
+    if (closestElectron) {
       mol.angle = Math.atan2(closestElectron.y - mol.y, closestElectron.x - mol.x);
     } else {
       mol.angle += (mol.originalAngle - mol.angle) * 0.1;
@@ -195,18 +202,14 @@
     ctx.translate(mol.x, mol.y);
     ctx.rotate(mol.angle);
 
-    // Water molecule geometry
     const bondLength = 20;
-    const bondAngleDeg = 104.5;
-    const bondAngleRad = bondAngleDeg * Math.PI / 180;
-
-    // Hydrogen positions relative to oxygen
+    const bondAngleRad = 104.5 * Math.PI / 180;
     const h1x = bondLength * Math.cos(-bondAngleRad / 2);
     const h1y = bondLength * Math.sin(-bondAngleRad / 2);
     const h2x = bondLength * Math.cos(bondAngleRad / 2);
     const h2y = bondLength * Math.sin(bondAngleRad / 2);
 
-    // Draw dipole arrow (O to midpoint of Hs)
+    // Dipole arrow
     const midX = (h1x + h2x) / 2;
     const midY = (h1y + h2y) / 2;
     ctx.save();
@@ -215,82 +218,62 @@
     ctx.lineWidth = 2;
     ctx.shadowColor = 'rgba(0,255,255,0.5)';
     ctx.shadowBlur = 8;
-    ctx.moveTo(0,0);
-    ctx.lineTo(midX*2.5, midY*2.5);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(midX * 2.5, midY * 2.5);
     ctx.stroke();
-
-    // Arrowhead
-    const arrowAngle = Math.atan2(midY, midX);
-    const arrowHeadSize = 8;
     ctx.beginPath();
-    ctx.moveTo(midX*2.5, midY*2.5);
-    ctx.lineTo(midX*2.5 - arrowHeadSize * Math.cos(arrowAngle - Math.PI/6), midY*2.5 - arrowHeadSize * Math.sin(arrowAngle - Math.PI/6));
-    ctx.lineTo(midX*2.5 - arrowHeadSize * Math.cos(arrowAngle + Math.PI/6), midY*2.5 - arrowHeadSize * Math.sin(arrowAngle + Math.PI/6));
+    const arrowAngle = Math.atan2(midY, midX);
+    const size = 8;
+    ctx.moveTo(midX * 2.5, midY * 2.5);
+    ctx.lineTo(midX * 2.5 - size * Math.cos(arrowAngle - Math.PI / 6), midY * 2.5 - size * Math.sin(arrowAngle - Math.PI / 6));
+    ctx.lineTo(midX * 2.5 - size * Math.cos(arrowAngle + Math.PI / 6), midY * 2.5 - size * Math.sin(arrowAngle + Math.PI / 6));
     ctx.closePath();
     ctx.fillStyle = 'rgba(0,255,255,0.7)';
     ctx.fill();
     ctx.restore();
 
-    // Oxygen atom
     ctx.beginPath();
     ctx.fillStyle = '#FF0D0D';
     ctx.shadowColor = 'rgba(255,13,13,0.8)';
     ctx.shadowBlur = 15;
-    ctx.arc(0,0,14,0,Math.PI*2);
+    ctx.arc(0, 0, 14, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // Bonds
     ctx.beginPath();
     ctx.strokeStyle = '#AAAAAA';
     ctx.lineWidth = 4;
     ctx.shadowColor = 'rgba(255,255,255,0.3)';
     ctx.shadowBlur = 6;
-    ctx.moveTo(0,0);
-    ctx.lineTo(h1x,h1y);
-    ctx.moveTo(0,0);
-    ctx.lineTo(h2x,h2y);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(h1x, h1y);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(h2x, h2y);
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // Hydrogens
     ctx.beginPath();
     ctx.fillStyle = '#FFFFFF';
     ctx.shadowColor = 'rgba(255,255,255,0.6)';
     ctx.shadowBlur = 12;
-    ctx.arc(h1x,h1y,8,0,Math.PI*2);
-    ctx.arc(h2x,h2y,8,0,Math.PI*2);
+    ctx.arc(h1x, h1y, 8, 0, Math.PI * 2);
+    ctx.arc(h2x, h2y, 8, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
-
     ctx.restore();
   }
 
-  // Draw Cherenkov cone behind electron if beta*n >1
-  function drawCherenkovCone(ctx, electron) {
-    const beta = electron.beta;
-    if(beta * n <= 1) return; // no Cherenkov radiation if below threshold
-
-    // Calculate Cherenkov angle
-    const thetaC = Math.acos(1 / (beta * n)); // radians
-
-    // Cone length and width on canvas
+  function drawCone(ctx, el) {
     const coneLength = 80;
+    const thetaC = Math.PI / 5;
     const coneWidth = coneLength * Math.tan(thetaC);
-
     ctx.save();
-    ctx.translate(electron.x, electron.y);
-
-    // Cone points forward along vx axis (positive x)
-    // We'll draw a translucent blue cone (wedge)
-
+    ctx.translate(el.x, el.y);
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(coneLength, -coneWidth);
     ctx.lineTo(coneLength, coneWidth);
     ctx.closePath();
-
-    // Gradient fill for cone (more intense near electron)
     const grad = ctx.createLinearGradient(0, 0, coneLength, 0);
     grad.addColorStop(0, 'rgba(0,200,255,0.7)');
     grad.addColorStop(1, 'rgba(0,100,255,0)');
@@ -299,54 +282,42 @@
     ctx.shadowBlur = 15;
     ctx.fill();
     ctx.shadowBlur = 0;
-
     ctx.restore();
   }
 
-  // Electron drawing with trail
-  function drawElectron(ctx, electron) {
-    electron.trail.push({x: electron.x, y: electron.y, alpha: electron.alpha});
-    if(electron.trail.length > 25) electron.trail.shift();
+  function drawElectron(ctx, el) {
+    el.trail.push({ x: el.x, y: el.y, alpha: el.alpha });
+    if (el.trail.length > 25) el.trail.shift();
 
-    // Draw trail
-    for(let i = 0; i < electron.trail.length; i++) {
-      const t = electron.trail[i];
+    for (let i = 0; i < el.trail.length; i++) {
+      const t = el.trail[i];
       ctx.beginPath();
-      ctx.fillStyle = `rgba(0,200,255,${t.alpha * (i / electron.trail.length)})`;
-      ctx.arc(t.x, t.y, 5 * (i / electron.trail.length), 0, Math.PI*2);
+      ctx.fillStyle = `rgba(0,200,255,${t.alpha * (i / el.trail.length)})`;
+      ctx.arc(t.x, t.y, 5 * (i / el.trail.length), 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Electron core glow
     ctx.beginPath();
-    const grad = ctx.createRadialGradient(electron.x, electron.y, 0, electron.x, electron.y, 15);
-    grad.addColorStop(0, `rgba(0,200,255,${electron.alpha})`);
+    const grad = ctx.createRadialGradient(el.x, el.y, 0, el.x, el.y, 15);
+    grad.addColorStop(0, `rgba(0,200,255,${el.alpha})`);
     grad.addColorStop(1, 'rgba(0,0,255,0)');
     ctx.fillStyle = grad;
-    ctx.arc(electron.x, electron.y, 10, 0, Math.PI*2);
+    ctx.arc(el.x, el.y, 10, 0, Math.PI * 2);
     ctx.fill();
   }
 
   function update() {
-    // Clear with slight opacity for fade effect
-    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw water molecules first
-    drawWaterMolecules();
-
-    // Draw electrons & cones
-    for(let i = electrons.length-1; i >= 0; i--) {
+    for (const mol of waterMolecules) drawWaterMolecule(ctx, mol, electrons);
+    for (let i = electrons.length - 1; i >= 0; i--) {
       const el = electrons[i];
-
-      drawCherenkovCone(ctx, el);
+      drawCone(ctx, el); // always show cone
       drawElectron(ctx, el);
-
-      // Update electron position
       el.x += el.vx;
       el.alpha -= 0.007;
-
-      if(el.alpha <= 0 || el.x > canvas.width + 50) {
+      if (el.alpha <= 0 || el.x > canvas.width + 50) {
         electrons.splice(i, 1);
       }
     }
@@ -354,14 +325,8 @@
     requestAnimationFrame(update);
   }
 
-  function drawWaterMolecules() {
-    waterMolecules.forEach(mol => drawWaterMolecule(ctx, mol, electrons));
-  }
-
-  // Start simulation
   update();
-
-})();
+}
 </script>
 
   
