@@ -228,6 +228,53 @@ function openCherenkovSim() {
 
   draw();
 }
+  // Draw water molecules (accurate H2O structure and colors)
+waterMolecules.forEach(mol => {
+  let facing = false;
+  for (const el of electrons) {
+    const dx = el.x - mol.x;
+    const dy = el.y - mol.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 180) {
+      mol.angle = Math.atan2(dy, dx);
+      facing = true;
+      break;
+    }
+  }
+  if (!facing) {
+    mol.angle += (mol.originalAngle - mol.angle) * 0.1;
+  }
+
+  ctx.save();
+  ctx.translate(mol.x, mol.y);
+  ctx.rotate(mol.angle);
+
+  // Draw bonds first (lines between O and H)
+  ctx.strokeStyle = '#cccccc';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(20 * Math.cos(-0.91), 20 * Math.sin(-0.91)); // H1
+  ctx.moveTo(0, 0);
+  ctx.lineTo(20 * Math.cos(0.91), 20 * Math.sin(0.91)); // H2
+  ctx.stroke();
+
+  // Oxygen atom (red)
+  ctx.beginPath();
+  ctx.fillStyle = '#ff0000';
+  ctx.arc(0, 0, 10, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Hydrogen atoms (white)
+  ctx.beginPath();
+  ctx.fillStyle = '#ffffff';
+  ctx.arc(20 * Math.cos(-0.91), 20 * Math.sin(-0.91), 5, 0, Math.PI * 2); // H1
+  ctx.arc(20 * Math.cos(0.91), 20 * Math.sin(0.91), 5, 0, Math.PI * 2); // H2
+  ctx.fill();
+
+  ctx.restore();
+});
+
 </script>
 
   
