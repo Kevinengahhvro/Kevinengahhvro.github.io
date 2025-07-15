@@ -115,27 +115,16 @@ function openCherenkovSim() {
 
   const simWin = document.createElement('div');
   simWin.className = 'draggable-window';
-  simWin.style.cssText = `
-    position: fixed;
-    top: 60px;
-    left: 60px;
-    width: 90vw;
-    height: 80vh;
-    background: #000;
-    border: 3px solid #00ffff;
-    z-index: 9999;
-    box-shadow: 0 0 20px #00ffff;
-  `;
   simWin.innerHTML = `
-    <div class="title-bar" style="background:#001f2f;color:#00ffff;font-family:'VT323',monospace;display:flex;justify-content:space-between;align-items:center;padding:10px;cursor:move;">
+    <div class="title-bar">
       <span>⚛️ Cherenkov Radiation Simulator</span>
       <button onclick="this.closest('.draggable-window').remove()" style="background:#00ffff;color:#000;border:none;padding:4px 10px;font-weight:bold;">X</button>
     </div>
-    <canvas id="cherenkovCanvas" style="display:block;width:100%;height:calc(100% - 40px);"></canvas>
+    <canvas id="cherenkovCanvas"></canvas>
   `;
   document.body.appendChild(simWin);
 
-  // Make draggable
+  // Draggable
   const titleBar = simWin.querySelector('.title-bar');
   let isDragging = false, offsetX = 0, offsetY = 0;
   titleBar.addEventListener('mousedown', e => {
@@ -151,7 +140,6 @@ function openCherenkovSim() {
   });
   document.addEventListener('mouseup', () => isDragging = false);
 
-  // Canvas setup
   const canvas = simWin.querySelector('#cherenkovCanvas');
   const ctx = canvas.getContext('2d');
   function resizeCanvas() {
@@ -162,141 +150,43 @@ function openCherenkovSim() {
   new ResizeObserver(resizeCanvas).observe(simWin);
 
   const electrons = [];
-  const waterMolecules = [];
-  const spacing = 130;
-  for (let x = 60; x < canvas.width; x += spacing) {
-    for (let y = 60; y < canvas.height; y += spacing) {
-      waterMolecules.push({ x, y, angle: 0, originalAngle: 0 });
-    }
-  }
 
   canvas.addEventListener('click', e => {
     electrons.push({
+      startX: e.clientX,
+      startY: e.clientY,
       x: e.clientX,
       y: e.clientY,
       vx: 10,
       alpha: 1,
-      trail: []
+      coneAngle: Math.PI / 6
     });
   });
 
-  function drawWaterMolecule(ctx, mol, electronPositions) {
-    let closestElectron = null;
-    let minDist = 180;
-    for (const el of electronPositions) {
-      const dx = el.x - mol.x;
-      const dy = el.y - mol.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < minDist) {
-        minDist = dist;
-        closestElectron = el;
-      }
-    }
-    if (closestElectron) {
-      mol.angle = Math.atan2(closestElectron.y - mol.y, closestElectron.x - mol.x);
-    } else {
-      mol.angle += (mol.originalAngle - mol.angle) * 0.1;
-    }
+  function drawCone(el) {
+    const dist = el.x - el.startX;
+    const coneLength = dist;
+    const coneWidth = coneLength * Math.tan(el.coneAngle);
 
     ctx.save();
-    ctx.translate(mol.x, mol.y);
-    ctx.rotate(mol.angle);
-
-    const bondLength = 20;
-    const bondAngleRad = 104.5 * Math.PI / 180;
-    const h1x = bondLength * Math.cos(-bondAngleRad / 2);
-    const h1y = bondLength * Math.sin(-bondAngleRad / 2);
-    const h2x = bondLength * Math.cos(bondAngleRad / 2);
-    const h2y = bondLength * Math.sin(bondAngleRad / 2);
-
-    // Dipole arrow
-    const midX = (h1x + h2x) / 2;
-    const midY = (h1y + h2y) / 2;
-    ctx.save();
-    ctx.beginPath();
-    ctx.strokeStyle = 'rgba(0,255,255,0.7)';
-    ctx.lineWidth = 2;
-    ctx.shadowColor = 'rgba(0,255,255,0.5)';
-    ctx.shadowBlur = 8;
-    ctx.moveTo(0, 0);
-    ctx.lineTo(midX * 2.5, midY * 2.5);
-    ctx.stroke();
-    ctx.beginPath();
-    const arrowAngle = Math.atan2(midY, midX);
-    const size = 8;
-    ctx.moveTo(midX * 2.5, midY * 2.5);
-    ctx.lineTo(midX * 2.5 - size * Math.cos(arrowAngle - Math.PI / 6), midY * 2.5 - size * Math.sin(arrowAngle - Math.PI / 6));
-    ctx.lineTo(midX * 2.5 - size * Math.cos(arrowAngle + Math.PI / 6), midY * 2.5 - size * Math.sin(arrowAngle + Math.PI / 6));
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(0,255,255,0.7)';
-    ctx.fill();
-    ctx.restore();
-
-    ctx.beginPath();
-    ctx.fillStyle = '#FF0D0D';
-    ctx.shadowColor = 'rgba(255,13,13,0.8)';
-    ctx.shadowBlur = 15;
-    ctx.arc(0, 0, 14, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    ctx.beginPath();
-    ctx.strokeStyle = '#AAAAAA';
-    ctx.lineWidth = 4;
-    ctx.shadowColor = 'rgba(255,255,255,0.3)';
-    ctx.shadowBlur = 6;
-    ctx.moveTo(0, 0);
-    ctx.lineTo(h1x, h1y);
-    ctx.moveTo(0, 0);
-    ctx.lineTo(h2x, h2y);
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    ctx.beginPath();
-    ctx.fillStyle = '#FFFFFF';
-    ctx.shadowColor = 'rgba(255,255,255,0.6)';
-    ctx.shadowBlur = 12;
-    ctx.arc(h1x, h1y, 8, 0, Math.PI * 2);
-    ctx.arc(h2x, h2y, 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.restore();
-  }
-
-  function drawCone(ctx, el) {
-    const coneLength = 80;
-    const thetaC = Math.PI / 5;
-    const coneWidth = coneLength * Math.tan(thetaC);
-    ctx.save();
-    ctx.translate(el.x, el.y);
+    ctx.translate(el.startX, el.startY);
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(coneLength, -coneWidth);
     ctx.lineTo(coneLength, coneWidth);
     ctx.closePath();
+
     const grad = ctx.createLinearGradient(0, 0, coneLength, 0);
-    grad.addColorStop(0, 'rgba(0,200,255,0.7)');
+    grad.addColorStop(0, 'rgba(0,200,255,0.6)');
     grad.addColorStop(1, 'rgba(0,100,255,0)');
     ctx.fillStyle = grad;
-    ctx.shadowColor = 'rgba(0,200,255,0.5)';
-    ctx.shadowBlur = 15;
+    ctx.shadowColor = 'rgba(0,200,255,0.4)';
+    ctx.shadowBlur = 10;
     ctx.fill();
-    ctx.shadowBlur = 0;
     ctx.restore();
   }
 
-  function drawElectron(ctx, el) {
-    el.trail.push({ x: el.x, y: el.y, alpha: el.alpha });
-    if (el.trail.length > 25) el.trail.shift();
-
-    for (let i = 0; i < el.trail.length; i++) {
-      const t = el.trail[i];
-      ctx.beginPath();
-      ctx.fillStyle = `rgba(0,200,255,${t.alpha * (i / el.trail.length)})`;
-      ctx.arc(t.x, t.y, 5 * (i / el.trail.length), 0, Math.PI * 2);
-      ctx.fill();
-    }
-
+  function drawElectron(el) {
     ctx.beginPath();
     const grad = ctx.createRadialGradient(el.x, el.y, 0, el.x, el.y, 15);
     grad.addColorStop(0, `rgba(0,200,255,${el.alpha})`);
@@ -310,13 +200,12 @@ function openCherenkovSim() {
     ctx.fillStyle = 'rgba(0,0,0,0.2)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    for (const mol of waterMolecules) drawWaterMolecule(ctx, mol, electrons);
     for (let i = electrons.length - 1; i >= 0; i--) {
       const el = electrons[i];
-      drawCone(ctx, el); // always show cone
-      drawElectron(ctx, el);
+      drawCone(el);
+      drawElectron(el);
       el.x += el.vx;
-      el.alpha -= 0.007;
+      el.alpha -= 0.006;
       if (el.alpha <= 0 || el.x > canvas.width + 50) {
         electrons.splice(i, 1);
       }
