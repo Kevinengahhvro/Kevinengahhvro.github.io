@@ -1,72 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>About Me</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <title>About — Kevin Anand</title>
   <style>
-    html, body {
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    body {
       margin: 0;
-      padding: 0;
-      background: #000;
-      color: #00ff00;
-      font-family: 'VT323', monospace;
       height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: black;
+      color: #00ff99;
+      font-family: 'Share Tech Mono', monospace;
+      overflow: hidden;
     }
 
-    .scanlines::before {
-      content: '';
+    /* CRT scanline effect */
+    body::before {
+      content: "";
       position: fixed;
       top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 999;
-      pointer-events: none;
+      width: 100%; height: 100%;
       background: repeating-linear-gradient(
         to bottom,
-        rgba(0, 255, 0, 0.05),
-        rgba(0, 255, 0, 0.05) 1px,
-        transparent 1px,
-        transparent 3px
+        rgba(0, 255, 150, 0.1) 0px,
+        rgba(0, 255, 150, 0.1) 1px,
+        transparent 2px,
+        transparent 4px
       );
+      pointer-events: none;
+      z-index: 999;
     }
 
-    .container {
-      text-align: center;
-      max-width: 600px;
-      padding: 30px;
-      border: 2px solid #00ff00;
-      background: rgba(0,0,0,0.85);
-      z-index: 1;
+    /* Retro draggable window */
+    .window {
+      width: 500px;
+      max-width: 80vw;
+      background: #111;
+      border: 2px solid #00ff99;
+      border-radius: 8px;
+      box-shadow: 0 0 20px #00ff99aa;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .title-bar {
+      background: #00ff99;
+      color: black;
+      padding: 5px 10px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: move;
+      border-bottom: 2px solid #00ff99;
+    }
+
+    .title-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: black;
+      border: 2px solid black;
+    }
+
+    .btn.close { background: red; }
+    .btn.min { background: yellow; }
+    .btn.max { background: lime; }
+
+    .content {
+      padding: 15px;
+      line-height: 1.5;
+      font-size: 1rem;
     }
 
     a {
-      color: #00ff00;
-      text-decoration: underline;
+      color: #00ffcc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-shadow: 0 0 6px #00ffff;
     }
 
-    a:hover {
-      color: #ff00ff;
-      text-shadow: 0 0 5px #ff00ff;
+    /* Boot-style intro animation */
+    @keyframes flicker {
+      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+        opacity: 1;
+      }
+      20%, 24%, 55% {
+        opacity: 0;
+      }
+    }
+
+    h1 {
+      font-size: 1.3rem;
+      animation: flicker 2s infinite;
     }
   </style>
 </head>
 <body>
-  <div class="scanlines"></div>
-  <div class="container">
-    <h1>Nice to meet you</h1>
-    <p>
-      I'm Kevin Anand — a proud engineer and physicist at heart.
-      <br><br>
-      I love designing, making, and testing ideas that fuse the physical world with creative tech.
-      <br><br>
-      I also shred on electric guitar and 3D print like a maniac 😎
-    </p>
-    <a href="main.html">← Back to Main</a>
+  <div class="window" id="aboutWindow">
+    <div class="title-bar" id="titleBar">
+      <span>ABOUT.TXT — Kevin Anand</span>
+      <div class="title-buttons">
+        <div class="btn close"></div>
+        <div class="btn min"></div>
+        <div class="btn max"></div>
+      </div>
+    </div>
+    <div class="content">
+      <h1>Kevin Anand</h1>
+      <p>
+        Engineer and physicist at heart. I love designing, making, and testing ideas
+        that blend science and creativity. My projects range from
+        <em>wind tunnel designs</em> to <em>nuclear radiation sims</em>,
+        always mixing theory with real-world builds.
+      </p>
+      <p>
+        I’m constantly exploring — whether it’s coding, electronics, or
+        hands-on mechanical projects.
+      </p>
+      <p>
+        <a href="index.html">&larr; Back to Main</a>
+      </p>
+    </div>
   </div>
+
+  <script>
+    // Dragging window logic
+    const windowEl = document.getElementById("aboutWindow");
+    const titleBar = document.getElementById("titleBar");
+    let isDragging = false, offsetX = 0, offsetY = 0;
+
+    titleBar.addEventListener("mousedown", e => {
+      isDragging = true;
+      offsetX = e.clientX - windowEl.offsetLeft;
+      offsetY = e.clientY - windowEl.offsetTop;
+    });
+
+    document.addEventListener("mouseup", () => { isDragging = false; });
+    document.addEventListener("mousemove", e => {
+      if (isDragging) {
+        windowEl.style.left = e.clientX - offsetX + "px";
+        windowEl.style.top = e.clientY - offsetY + "px";
+        windowEl.style.transform = "none"; // disable center translate after dragging
+      }
+    });
+  </script>
 </body>
 </html>
+```
+
