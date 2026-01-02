@@ -5,6 +5,7 @@
   <title>Projects — Kevin OS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
+
   <style>
     html, body {
       margin: 0;
@@ -15,6 +16,7 @@
       overflow: hidden;
     }
 
+    /* CRT Scanlines */
     .scanlines::before {
       content: '';
       position: fixed;
@@ -77,7 +79,7 @@
       color: #000;
     }
 
-    /* Fullscreen FAX-style Loader */
+    /* FULLSCREEN FAX LOADING */
     #fax-loading {
       position: fixed;
       top: 0;
@@ -100,26 +102,46 @@
       pointer-events: all;
     }
 
+    /* UPGRADED AESTHETIC ASCII PULSE BOX */
     .ascii-icon {
       font-size: 16px;
       border: 2px solid #00ff00;
-      padding: 20px;
-      background: #000;
+      padding: 25px 30px;
+      background: rgba(0, 0, 0, 0.85);
       color: #00ff00;
-      box-shadow: 0 0 20px #00ff00;
-      animation: pulsebox 0.9s infinite alternate;
+
       white-space: pre;
-      line-height: 1.4;
+      line-height: 1.35;
+      letter-spacing: 0.5px;
+      border-radius: 6px;
+
+      box-shadow:
+        0 0 12px #00ff00,
+        0 0 35px rgba(0,255,0,0.8),
+        inset 0 0 25px rgba(0,255,0,0.4),
+        inset 0 0 8px rgba(0,255,0,0.7);
+
+      animation: pulsebox 1.2s infinite ease-in-out alternate;
     }
 
     @keyframes pulsebox {
       0% {
         transform: scale(1);
-        box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00 inset;
+        box-shadow:
+          0 0 10px #00ff00,
+          0 0 25px rgba(0,255,0,0.7),
+          inset 0 0 20px rgba(0,255,0,0.3),
+          inset 0 0 6px rgba(0,255,0,0.6);
+        filter: brightness(1);
       }
       100% {
-        transform: scale(1.015);
-        box-shadow: 0 0 30px #00ff00, 0 0 50px #00ff00 inset;
+        transform: scale(1.025);
+        box-shadow:
+          0 0 14px #00ff00,
+          0 0 50px rgba(0,255,0,1),
+          inset 0 0 40px rgba(0,255,0,0.6),
+          inset 0 0 12px rgba(0,255,0,0.9);
+        filter: brightness(1.25);
       }
     }
 
@@ -137,6 +159,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="scanlines"></div>
   <canvas id="arrow-canvas"></canvas>
@@ -144,14 +167,14 @@
   <div class="container">
     <h1>My Project Timeline</h1>
     <ul class="timeline">
-      <li data-url="project1.html"> Year 10 Work Experience with USYD Aeronautical School</li>
-      <li data-url="project2.html"> Year 11 ANSTO's OPAL Reactor Cherenkov Radiation analysis</li>
-      <li data-url="project3.html"> Interview with Charles Oppenhiemer on the movie and his Grandfather's legacy </li>
-      <li data-url="project3.html"> Year  </li>
+      <li data-url="project1.html">Year 10 Work Experience with USYD Aeronautical School</li>
+      <li data-url="project2.html">Year 11 ANSTO's OPAL Reactor Cherenkov Radiation analysis</li>
+      <li data-url="project3.html">Interview with Charles Oppenhiemer</li>
+      <li data-url="project4.html">Year 12 Major Project</li>
     </ul>
   </div>
 
-  <!-- FULLSCREEN FAX ANIMATION -->
+  <!-- FAX ANIMATION -->
   <div id="fax-loading">
     <div class="ascii-icon">
 <pre>
@@ -169,12 +192,12 @@
 |========================================|
 |__________TRANSMISSION IN PROGRESS______|
 </pre>
-      <div id="scroll-icon">⌄⌄⌄</div>
     </div>
+    <div id="scroll-icon">⌄⌄⌄</div>
   </div>
 
   <script>
-    // VECTOR BACKGROUND
+    /* VECTOR ARROW BACKGROUND */
     const canvas = document.getElementById('arrow-canvas');
     const ctx = canvas.getContext('2d');
     let mouse = { x: null, y: null };
@@ -207,34 +230,41 @@
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
+
         ctx.beginPath();
         ctx.moveTo(-arrowSize / 2, 0);
         ctx.lineTo(arrowSize / 2, 0);
         ctx.lineTo(arrowSize / 4, -arrowSize / 4);
         ctx.moveTo(arrowSize / 2, 0);
         ctx.lineTo(arrowSize / 4, arrowSize / 4);
-        const distance = this.getDistanceToMouse();
+
+        const dist = this.getDistanceToMouse();
         const maxDist = 150;
-        const clampedDist = Math.min(distance, maxDist);
-        const ratio = 1 - clampedDist / maxDist;
+        const clamped = Math.min(dist, maxDist);
+        const ratio = 1 - clamped / maxDist;
+
         const red = Math.floor(ratio * 255);
         const green = Math.floor((1 - ratio) * 255);
+
         ctx.strokeStyle = `rgb(${red}, ${green}, 0)`;
         ctx.lineWidth = 1.5;
         ctx.stroke();
+
         ctx.restore();
       }
 
       update() {
-        if (mouse.x === null || mouse.y === null) return;
-        let dx = mouse.x - this.x;
-        let dy = mouse.y - this.y;
-        let dist = Math.sqrt(dx * dx + dy * dy);
+        if (!mouse.x && !mouse.y) return;
+
+        const dx = mouse.x - this.x;
+        const dy = mouse.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
         const maxDist = 150;
+
         if (dist < maxDist) {
-          let targetAngle = Math.atan2(dy, dx);
-          let influence = (maxDist - dist) / maxDist;
-          this.angle += (targetAngle - this.angle) * influence * 0.3;
+          const target = Math.atan2(dy, dx);
+          const influence = (maxDist - dist) / maxDist;
+          this.angle += (target - this.angle) * influence * 0.3;
         } else {
           this.angle += (Math.PI / 2 - this.angle) * 0.05;
         }
@@ -266,18 +296,18 @@
 
     init();
     animate();
-    // Auto-show fax animation on load
-window.addEventListener('load', () => {
-  fax.classList.add('show');
-  setTimeout(() => {
-    fax.classList.remove('show');
-  }, 3000);
-});
 
-
-    // FAX TRANSITION
+    /* FAX TRANSITION */
     const items = document.querySelectorAll('.timeline li');
     const fax = document.getElementById('fax-loading');
+
+    // Auto fade-in on page load
+    window.addEventListener('load', () => {
+      fax.classList.add('show');
+      setTimeout(() => {
+        fax.classList.remove('show');
+      }, 3000);
+    });
 
     items.forEach(item => {
       item.addEventListener('click', () => {
@@ -289,5 +319,6 @@ window.addEventListener('load', () => {
       });
     });
   </script>
+
 </body>
 </html>
