@@ -20,7 +20,6 @@
       user-select: none;
     }
 
-    /* Container for your main content */
     .container {
       position: relative;
       z-index: 1;
@@ -42,7 +41,6 @@
       text-shadow: 0 0 5px #ff00ff;
     }
 
-    /* Canvas full screen */
     #arrow-canvas {
       position: fixed;
       top: 0; left: 0;
@@ -51,7 +49,6 @@
       pointer-events: none;
     }
 
-    /* CRT scanlines overlay */
     .scanlines::before {
       content: '';
       position: fixed;
@@ -89,8 +86,8 @@
     let mouse = { x: null, y: null };
     let arrows = [];
 
-    const spacing = 20;    // More arrows with smaller spacing
-    const arrowSize = 6;   // Arrow size
+    const spacing = 20;
+    const arrowSize = 6;
 
     function resize() {
       canvas.width = window.innerWidth;
@@ -105,11 +102,33 @@
       mouse.y = e.clientY;
     });
 
+    // Linear interpolation helper
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    // CFD-style heatmap colour: red → orange → yellow → green → blue
+    function heatmapColor(t) {
+      if (t < 0.25) {
+        let k = t / 0.25;
+        return `rgb(${255}, ${Math.floor(lerp(0,140,k))}, 0)`;
+      } else if (t < 0.50) {
+        let k = (t - 0.25) / 0.25;
+        return `rgb(${255}, ${Math.floor(lerp(140,255,k))}, 0)`;
+      } else if (t < 0.75) {
+        let k = (t - 0.50) / 0.25;
+        return `rgb(${Math.floor(lerp(255,0,k))}, ${255}, 0)`;
+      } else {
+        let k = (t - 0.75) / 0.25;
+        return `rgb(0, ${Math.floor(lerp(255,0,k))}, ${Math.floor(lerp(0,255,k))})`;
+      }
+    }
+
     class Arrow {
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.angle = Math.PI / 2; // default vertical
+        this.angle = Math.PI / 2;
       }
 
       draw() {
@@ -126,13 +145,10 @@
 
         const distance = this.getDistanceToMouse();
         const maxDist = 150;
-        const clampedDist = Math.min(distance, maxDist);
-        const ratio = 1 - clampedDist / maxDist;
+        const clamped = Math.min(distance, maxDist) / maxDist;
+        const color = heatmapColor(clamped);
 
-        const red = Math.floor(ratio * 255);
-        const green = Math.floor((1 - ratio) * 255);
-
-        ctx.strokeStyle = `rgb(${red}, ${green}, 0)`;
+        ctx.strokeStyle = color;
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
@@ -141,7 +157,6 @@
 
       update() {
         if (mouse.x === null || mouse.y === null) {
-          // return to vertical slowly
           this.angle += (Math.PI / 2 - this.angle) * 0.05;
           return;
         }
@@ -179,12 +194,19 @@
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      arrows.forEach(arrow => {
-        arrow.update();
-        arrow.draw();
+      arrows.forEach(a => {
+        a.update();
+        a.draw();
       });
       requestAnimationFrame(animate);
     }
+
+    resize();
+    animate();
+  </script>
+</body>
+</html>
+
 
     resize();
     animate();
