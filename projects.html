@@ -16,18 +16,14 @@
       overflow: hidden;
     }
 
-    /* CRT Scanlines */
     .scanlines::before {
       content: '';
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      inset: 0;
       background: repeating-linear-gradient(
         to bottom,
-        rgba(0, 255, 0, 0.03),
-        rgba(0, 255, 0, 0.03) 1px,
+        rgba(0,255,0,0.03),
+        rgba(0,255,0,0.03) 1px,
         transparent 1px,
         transparent 3px
       );
@@ -37,10 +33,7 @@
 
     #arrow-canvas {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      inset: 0;
       z-index: 0;
       pointer-events: none;
     }
@@ -51,7 +44,7 @@
       max-width: 800px;
       margin: 60px auto;
       padding: 20px;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0,0,0,0.85);
       border: 1px solid #00ff00;
     }
 
@@ -71,7 +64,7 @@
       padding: 10px;
       border: 1px solid #00ff00;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: background 0.25s;
     }
 
     ul.timeline li:hover {
@@ -79,13 +72,9 @@
       color: #000;
     }
 
-    /* FULLSCREEN FAX LOADING */
     #fax-loading {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      inset: 0;
       background: #000;
       display: flex;
       align-items: center;
@@ -102,57 +91,32 @@
       pointer-events: all;
     }
 
-    /* UPGRADED AESTHETIC ASCII PULSE BOX */
     .ascii-icon {
       font-size: 16px;
-      border: 2px solid #00ff00;
       padding: 25px 30px;
-      background: rgba(0, 0, 0, 0.85);
-      color: #00ff00;
-
+      border: 2px solid #00ff00;
+      background: rgba(0,0,0,0.9);
       white-space: pre;
-      line-height: 1.35;
-      letter-spacing: 0.5px;
       border-radius: 6px;
-
       box-shadow:
-        0 0 12px #00ff00,
-        0 0 35px rgba(0,255,0,0.8),
-        inset 0 0 25px rgba(0,255,0,0.4),
-        inset 0 0 8px rgba(0,255,0,0.7);
-
-      animation: pulsebox 1.2s infinite ease-in-out alternate;
+        0 0 15px #00ff00,
+        0 0 40px rgba(0,255,0,0.8),
+        inset 0 0 30px rgba(0,255,0,0.4);
+      animation: pulse 1.2s infinite alternate;
     }
 
-    @keyframes pulsebox {
-      0% {
-        transform: scale(1);
-        box-shadow:
-          0 0 10px #00ff00,
-          0 0 25px rgba(0,255,0,0.7),
-          inset 0 0 20px rgba(0,255,0,0.3),
-          inset 0 0 6px rgba(0,255,0,0.6);
-        filter: brightness(1);
-      }
-      100% {
-        transform: scale(1.025);
-        box-shadow:
-          0 0 14px #00ff00,
-          0 0 50px rgba(0,255,0,1),
-          inset 0 0 40px rgba(0,255,0,0.6),
-          inset 0 0 12px rgba(0,255,0,0.9);
-        filter: brightness(1.25);
-      }
+    @keyframes pulse {
+      from { transform: scale(1); filter: brightness(1); }
+      to   { transform: scale(1.03); filter: brightness(1.25); }
     }
 
     #scroll-icon {
       font-size: 28px;
       margin-top: 15px;
-      color: #00ff00;
-      animation: scrollAnim 1s infinite;
+      animation: scroll 1s infinite;
     }
 
-    @keyframes scrollAnim {
+    @keyframes scroll {
       0% { transform: translateY(0); opacity: 1; }
       50% { transform: translateY(8px); opacity: 0.5; }
       100% { transform: translateY(0); opacity: 1; }
@@ -161,164 +125,153 @@
 </head>
 
 <body>
-  <div class="scanlines"></div>
-  <canvas id="arrow-canvas"></canvas>
+<div class="scanlines"></div>
+<canvas id="arrow-canvas"></canvas>
 
-  <div class="container">
-    <h1>My Project Timeline</h1>
-    <ul class="timeline">
-      <li data-url="project1.html">Year 10 Work Experience with USYD Aeronautical School</li>
-      <li data-url="project2.html">Year 11 ANSTO's OPAL Reactor Cherenkov Radiation analysis</li>
-      <li data-url="project3.html">Interview with Charles Oppenhiemer</li>
-      <li data-url="project4.html">Year 12 Major Project</li>
-    </ul>
-  </div>
+<div class="container">
+  <h1>My Project Timeline</h1>
+  <ul class="timeline">
+    <li data-url="project1.html">Year 10 Work Experience with USYD Aeronautical School</li>
+    <li data-url="project2.html">Year 11 ANSTO OPAL Reactor Cherenkov Analysis</li>
+    <li data-url="project3.html">Interview with Charles Oppenheimer</li>
+    <li data-url="project4.html">Year 12 Major Project</li>
+  </ul>
+</div>
 
-  <!-- FAX ANIMATION -->
-  <div id="fax-loading">
-    <div class="ascii-icon">
+<div id="fax-loading">
+  <div class="ascii-icon">
 <pre>
  ________________________________________
 | :::::::::::::::::::::::::::::::::::::: |
 | > FAXING FILE... PLEASE STAND BY...    |
 |========================================|
 ||   ████████████████████████████████   ||
-||   ████████████████████████████████   ||
 ||                                      ||
 ||   /home/kevin/portfolio/projects     ||
-||     -> uploading project-file.html   ||
-||     -> sending metadata packet...    ||
-||     -> encrypting 256-bit stream...  ||
+||     -> encrypting stream...          ||
 |========================================|
 |__________TRANSMISSION IN PROGRESS______|
 </pre>
-    </div>
-    <div id="scroll-icon">⌄⌄⌄</div>
   </div>
+  <div id="scroll-icon">⌄⌄⌄</div>
+</div>
 
-  <script>
-    /* VECTOR ARROW BACKGROUND */
-    const canvas = document.getElementById('arrow-canvas');
-    const ctx = canvas.getContext('2d');
-    let mouse = { x: null, y: null };
-    let arrows = [];
-    const spacing = 20;
-    const arrowSize = 6;
+<script>
+const canvas = document.getElementById('arrow-canvas');
+const ctx = canvas.getContext('2d');
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+let mouse = { x: null, y: null };
+let arrows = [];
 
-    window.addEventListener('resize', () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      init();
-    });
+const spacing = 20;
+const arrowSize = 6;
+const maxDist = 150;
 
-    window.addEventListener('mousemove', (e) => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-    });
+function resize() {
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+  init();
+}
 
-    class Arrow {
-      constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.angle = Math.PI / 2;
-      }
+window.addEventListener('resize', resize);
+window.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
 
-      draw() {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle);
+class Arrow {
+  constructor(x,y) {
+    this.x = x;
+    this.y = y;
+    this.angle = Math.PI / 2;
+  }
 
-        ctx.beginPath();
-        ctx.moveTo(-arrowSize / 2, 0);
-        ctx.lineTo(arrowSize / 2, 0);
-        ctx.lineTo(arrowSize / 4, -arrowSize / 4);
-        ctx.moveTo(arrowSize / 2, 0);
-        ctx.lineTo(arrowSize / 4, arrowSize / 4);
+  update() {
+    if (mouse.x == null) return;
+    const dx = mouse.x - this.x;
+    const dy = mouse.y - this.y;
+    const d = Math.hypot(dx,dy);
 
-        const dist = this.getDistanceToMouse();
-        const maxDist = 150;
-        const clamped = Math.min(dist, maxDist);
-        const ratio = 1 - clamped / maxDist;
-
-        const red = Math.floor(ratio * 255);
-        const green = Math.floor((1 - ratio) * 255);
-
-        ctx.strokeStyle = `rgb(${red}, ${green}, 0)`;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        ctx.restore();
-      }
-
-      update() {
-        if (!mouse.x && !mouse.y) return;
-
-        const dx = mouse.x - this.x;
-        const dy = mouse.y - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = 150;
-
-        if (dist < maxDist) {
-          const target = Math.atan2(dy, dx);
-          const influence = (maxDist - dist) / maxDist;
-          this.angle += (target - this.angle) * influence * 0.3;
-        } else {
-          this.angle += (Math.PI / 2 - this.angle) * 0.05;
-        }
-      }
-
-      getDistanceToMouse() {
-        if (mouse.x === null || mouse.y === null) return Infinity;
-        return Math.hypot(mouse.x - this.x, mouse.y - this.y);
-      }
+    if (d < maxDist) {
+      const target = Math.atan2(dy,dx);
+      const k = (maxDist - d) / maxDist;
+      this.angle += (target - this.angle) * k * 0.3;
+    } else {
+      this.angle += (Math.PI/2 - this.angle) * 0.05;
     }
+  }
 
-    function init() {
-      arrows = [];
-      for (let x = 0; x < canvas.width; x += spacing) {
-        for (let y = 0; y < canvas.height; y += spacing) {
-          arrows.push(new Arrow(x, y));
-        }
-      }
-    }
+  draw() {
+    const d = mouse.x == null ? maxDist : Math.hypot(mouse.x-this.x, mouse.y-this.y);
+    const t = Math.max(0, Math.min(1, 1 - d/maxDist));
+    const color = heatMapColor(t);
 
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      arrows.forEach(a => {
-        a.update();
-        a.draw();
-      });
-      requestAnimationFrame(animate);
-    }
+    ctx.save();
+    ctx.translate(this.x,this.y);
+    ctx.rotate(this.angle);
 
-    init();
-    animate();
+    ctx.strokeStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 10 * t;
+    ctx.lineWidth = 1.5;
 
-    /* FAX TRANSITION */
-    const items = document.querySelectorAll('.timeline li');
-    const fax = document.getElementById('fax-loading');
+    ctx.beginPath();
+    ctx.moveTo(-arrowSize/2,0);
+    ctx.lineTo(arrowSize/2,0);
+    ctx.lineTo(arrowSize/4,-arrowSize/4);
+    ctx.moveTo(arrowSize/2,0);
+    ctx.lineTo(arrowSize/4,arrowSize/4);
+    ctx.stroke();
 
-    // Auto fade-in on page load
-    window.addEventListener('load', () => {
-      fax.classList.add('show');
-      setTimeout(() => {
-        fax.classList.remove('show');
-      }, 3000);
-    });
+    ctx.restore();
+  }
+}
 
-    items.forEach(item => {
-      item.addEventListener('click', () => {
-        fax.classList.add('show');
-        setTimeout(() => {
-          const url = item.getAttribute('data-url');
-          if (url) window.location.href = url;
-        }, 3000);
-      });
-    });
-  </script>
+function heatMapColor(t) {
+  let r=0,g=0,b=0;
+  if (t < 0.25) {
+    const k = t/0.25; g=255*k; b=255;
+  } else if (t < 0.5) {
+    const k=(t-0.25)/0.25; g=255; b=255*(1-k);
+  } else if (t < 0.75) {
+    const k=(t-0.5)/0.25; r=255*k; g=255;
+  } else {
+    const k=(t-0.75)/0.25; r=255; g=255*(1-k);
+  }
+  return `rgb(${r|0},${g|0},${b|0})`;
+}
 
+function init() {
+  arrows = [];
+  for (let x=0;x<canvas.width;x+=spacing)
+    for (let y=0;y<canvas.height;y+=spacing)
+      arrows.push(new Arrow(x,y));
+}
+
+function animate() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  arrows.forEach(a => { a.update(); a.draw(); });
+  requestAnimationFrame(animate);
+}
+
+resize();
+animate();
+
+/* FAX TRANSITIONS */
+const fax = document.getElementById('fax-loading');
+const items = document.querySelectorAll('.timeline li');
+
+window.addEventListener('load', ()=>{
+  fax.classList.add('show');
+  setTimeout(()=>fax.classList.remove('show'),3000);
+});
+
+items.forEach(i=>{
+  i.onclick=()=>{
+    fax.classList.add('show');
+    setTimeout(()=>location.href=i.dataset.url,3000);
+  };
+});
+</script>
 </body>
 </html>
